@@ -14,37 +14,39 @@ jobs:
     container:
       image: archlinux:latest
     steps:
+      - name: Install Git
+        run: pacman -Syu --noconfirm git
+
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install dependencies
         run: |
-          pacman -Syu --noconfirm base-devel git openssh sudo pacman-contrib
+          pacman -S --noconfirm base-devel openssh sudo pacman-contrib
 
       - name: Setup build user
         run: |
           useradd -m build
           echo "build ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/build
+          # On donne la propriété du workspace à build
+          chown -R build:build "$GITHUB_WORKSPACE"
+          # On autorise le dossier pour git en tant que build
+          sudo -u build bash -c "git config --global --add safe.directory $GITHUB_WORKSPACE"
 
-      - name: Update .SRCINFO and Commit
+      - name: Update Checksums and .SRCINFO
         run: |
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           dir="${{ inputs.package }}"
-          
           if [ ! -d "$dir" ]; then
             echo "Error: Directory $dir does not exist."
             exit 1
           fi
           
-          # Changement de propriétaire pour que l'utilisateur build puisse tout gérer
-          chown -R build:build "$GITHUB_WORKSPACE"
-          
-          # On configure safe.directory pour l'utilisateur build spécifiquement
-          sudo -u build bash -c "git config --global --add safe.directory $GITHUB_WORKSPACE"
-          
           sudo -u build bash -c "cd $dir && updpkgsums"
           sudo -u build bash -c "cd $dir && makepkg --printsrcinfo > .SRCINFO"
           
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add "$dir/PKGBUILD" "$dir/.SRCINFO"
