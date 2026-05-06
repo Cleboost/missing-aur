@@ -69,6 +69,8 @@ jobs:
           ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
 
       - name: Push to AUR
+        env:
+          GIT_SSH_COMMAND: ssh -i ~/.ssh/id_aur -o StrictHostKeyChecking=accept-new
         run: |
           dir="${{ inputs.package }}"
           pkgname=$(grep -oP '^pkgname=\K.*' "$dir/PKGBUILD")

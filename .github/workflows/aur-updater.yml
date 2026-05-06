@@ -101,6 +101,8 @@ jobs:
           ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
 
       - name: Clone and Push to AUR
+        env:
+          GIT_SSH_COMMAND: ssh -i ~/.ssh/id_aur -o StrictHostKeyChecking=accept-new
         run: |
           git clone aur@aur.archlinux.org:${{ matrix.package.pkgname }}.git aur_repo
           
