@@ -1,0 +1,81 @@
+name: Force AUR Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Directory name of the package to publish'
+        required: true
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          pacman -Syu --noconfirm base-devel git openssh sudo
+
+      - name: Setup build user
+        run: |
+          useradd -m build
+          echo "build ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/build
+
+      - name: Update .SRCINFO and Commit
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          dir="${{ inputs.package }}"
+          
+          if [ ! -d "$dir" ]; then
+            echo "Error: Directory $dir does not exist."
+            exit 1
+          fi
+          
+          chown -R build:build "$dir"
+          sudo -u build bash -c "cd $dir && makepkg --printsrcinfo > .SRCINFO"
+          
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add "$dir/.SRCINFO"
+          
+          if git diff --staged --quiet; then
+            echo "No changes in .SRCINFO"
+          else
+            git commit -m "chore: force update .SRCINFO for $dir"
+            git push
+          fi
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/id_aur
+          chmod 600 ~/.ssh/id_aur
+          echo "Host aur.archlinux.org
+            IdentityFile ~/.ssh/id_aur
+            User aur" > ~/.ssh/config
+          ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
+
+      - name: Push to AUR
+        run: |
+          dir="${{ inputs.package }}"
+          pkgname=$(grep -oP '^pkgname=\K.*' "$dir/PKGBUILD")
+          
+          git clone aur@aur.archlinux.org:$pkgname.git aur_repo
+          find aur_repo -maxdepth 1 -not -name ".git" -not -name "aur_repo" -exec rm -rf {} +
+          cp $dir/PKGBUILD aur_repo/
+          cp $dir/.SRCINFO aur_repo/
+          
+          cd aur_repo
+          git config user.name "${{ secrets.AUR_USERNAME }}"
+          git config user.email "${{ secrets.AUR_EMAIL }}"
+          git add PKGBUILD .SRCINFO
+          
+          pkgver=$(grep -oP '^pkgver=\K.*' PKGBUILD)
+          pkgrel=$(grep -oP '^pkgrel=\K.*' PKGBUILD)
+          git commit -m "Manual update to $pkgver-$pkgrel" || echo "No changes to commit"
+          git push origin master
