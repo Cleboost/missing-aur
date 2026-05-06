@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pacman -Syu --noconfirm base-devel git openssh sudo
+          pacman -Syu --noconfirm base-devel git openssh sudo pacman-contrib
 
       - name: Setup build user
         run: |
