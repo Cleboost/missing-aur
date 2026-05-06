@@ -29,7 +29,8 @@ jobs:
         id: check-updates
         shell: bash
         run: |
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          chown -R build:build "$GITHUB_WORKSPACE"
+          sudo -u build bash -c "git config --global --add safe.directory $GITHUB_WORKSPACE"
           
           updated_list=()
           for dir in */; do
@@ -37,14 +38,12 @@ jobs:
             if [[ -f "$dir/PKGBUILD" && -f "$dir/version.sh" ]]; then
               echo "::group::Checking $dir"
               pkgver=$(grep -oP '^pkgver=\K.*' "$dir/PKGBUILD")
-              latest_ver=$(cd "$dir" && bash ./version.sh)
+              latest_ver=$(sudo -u build bash -c "cd $dir && bash ./version.sh")
               
               if [[ "$pkgver" != "$latest_ver" ]]; then
                 echo "New version detected for $dir: $pkgver -> $latest_ver"
                 sed -i "s/^pkgver=.*/pkgver=$latest_ver/" "$dir/PKGBUILD"
                 sed -i "s/^pkgrel=.*/pkgrel=1/" "$dir/PKGBUILD"
-                
-                chown -R build:build "$dir"
                 
                 sudo -u build bash -c "cd $dir && updpkgsums"
                 sudo -u build bash -c "cd $dir && makepkg --printsrcinfo > .SRCINFO"
