@@ -36,7 +36,11 @@ jobs:
             exit 1
           fi
           
-          chown -R build:build "$dir"
+          # Changement de propriétaire pour que l'utilisateur build puisse tout gérer
+          chown -R build:build "$GITHUB_WORKSPACE"
+          
+          # On configure safe.directory pour l'utilisateur build spécifiquement
+          sudo -u build bash -c "git config --global --add safe.directory $GITHUB_WORKSPACE"
           
           sudo -u build bash -c "cd $dir && updpkgsums"
           sudo -u build bash -c "cd $dir && makepkg --printsrcinfo > .SRCINFO"
