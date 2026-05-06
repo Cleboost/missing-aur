@@ -18,7 +18,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pacman -Syu --noconfirm base-devel git curl jq sudo
+          pacman -Syu --noconfirm base-devel git curl jq sudo pacman-contrib
 
       - name: Setup build user
         run: |
