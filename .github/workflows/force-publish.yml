@@ -37,16 +37,18 @@ jobs:
           fi
           
           chown -R build:build "$dir"
+          
+          sudo -u build bash -c "cd $dir && updpkgsums"
           sudo -u build bash -c "cd $dir && makepkg --printsrcinfo > .SRCINFO"
           
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add "$dir/.SRCINFO"
+          git add "$dir/PKGBUILD" "$dir/.SRCINFO"
           
           if git diff --staged --quiet; then
-            echo "No changes in .SRCINFO"
+            echo "No changes in PKGBUILD or .SRCINFO"
           else
-            git commit -m "chore: force update .SRCINFO for $dir"
+            git commit -m "chore: force update checksums and .SRCINFO for $dir"
             git push
           fi
 
