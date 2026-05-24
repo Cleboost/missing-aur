@@ -1,4 +1,5 @@
-# Maintainer: Cleboost <clement.balarot@gmail.com>
+# Maintainer: Cleboost <clement.balarot@gmail.com> (missing-aur project)
+# Contributor: missing-aur project <https://github.com/Cleboost/missing-aur>
 
 pkgname=kissmp-server-bin
 pkgver=0.8.0
