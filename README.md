@@ -16,6 +16,7 @@ This repository uses a GitHub Action that runs daily to:
 - **[kibo-appimage](https://www.kiboanime.app/)**: Kibo Anime AppImage - Application for watching anime.
 - **[psst-bin](https://github.com/jpochyla/psst)**: Fast and multi-platform Spotify client with native GUI (binary version).
 - **[temper-bin](https://github.com/temper-mc/temper)**: A stupidly fast open-source Minecraft server, written in Rust (binary version).
+- **[temper-git](https://github.com/temper-mc/temper)**: A stupidly fast open-source Minecraft server, written in Rust (git version).
 
 ## Contributing
 
