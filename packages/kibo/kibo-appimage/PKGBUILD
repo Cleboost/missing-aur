@@ -1,3 +1,6 @@
+# Maintainer: Cleboost <clement.balarot@gmail.com> (missing-aur project)
+# Contributor: missing-aur project <https://github.com/Cleboost/missing-aur>
+
 pkgname=kibo-appimage
 pkgver=1.1.7
 pkgrel=2
