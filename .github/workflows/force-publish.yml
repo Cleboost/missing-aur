@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       package:
-        description: 'Directory name of the package to publish'
+        description: 'Package directory (e.g., kissmp/kissmp-bridge-bin)'
         required: true
         type: string
 
@@ -38,6 +38,9 @@ jobs:
       - name: Update Checksums and .SRCINFO
         run: |
           dir="${{ inputs.package }}"
+          if [[ ! "$dir" =~ ^packages/ ]]; then
+            dir="packages/$dir"
+          fi
           if [ ! -d "$dir" ]; then
             echo "Error: Directory $dir does not exist."
             exit 1
@@ -73,6 +76,9 @@ jobs:
           GIT_SSH_COMMAND: ssh -i ~/.ssh/id_aur -o StrictHostKeyChecking=accept-new
         run: |
           dir="${{ inputs.package }}"
+          if [[ ! "$dir" =~ ^packages/ ]]; then
+            dir="packages/$dir"
+          fi
           pkgname=$(grep -oP '^pkgname=\K.*' "$dir/PKGBUILD")
           
           git clone aur@aur.archlinux.org:$pkgname.git aur_repo
