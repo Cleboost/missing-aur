@@ -14,6 +14,8 @@ This repository uses a GitHub Action that runs daily to:
 ## Available Packages
 
 - **[kibo-appimage](https://www.kiboanime.app/)**: Kibo Anime AppImage - Application for watching anime.
+- **[kissmp-bridge-bin](https://github.com/TheHellBox/KISS-multiplayer)**: Bridge for KissMP, a multiplayer mod for BeamNG.drive (binary version).
+- **[kissmp-server-bin](https://github.com/TheHellBox/KISS-multiplayer)**: Server for KissMP, a multiplayer mod for BeamNG.drive (binary version).
 - **[psst-bin](https://github.com/jpochyla/psst)**: Fast and multi-platform Spotify client with native GUI (binary version).
 - **[temper-bin](https://github.com/temper-mc/temper)**: A stupidly fast open-source Minecraft server, written in Rust (binary version).
 - **[temper-git](https://github.com/temper-mc/temper)**: A stupidly fast open-source Minecraft server, written in Rust (git version).
