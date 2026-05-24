@@ -1,0 +1,101 @@
+name: AUR Git Sync
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/*/*-git/**'
+  workflow_dispatch:
+
+jobs:
+  sync-git-packages:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    steps:
+      - name: Install Git
+        run: pacman -Syu --noconfirm git
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          pacman -S --noconfirm base-devel openssh sudo pacman-contrib
+
+      - name: Setup build user
+        run: |
+          useradd -m build
+          echo "build ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/build
+          chown -R build:build "$GITHUB_WORKSPACE"
+          sudo -u build bash -c "git config --global --add safe.directory $GITHUB_WORKSPACE"
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/id_aur
+          chmod 600 ~/.ssh/id_aur
+          echo "Host aur.archlinux.org
+            IdentityFile ~/.ssh/id_aur
+            User aur" > ~/.ssh/config
+          ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
+
+      - name: Find and Publish Modified Git Packages
+        env:
+          GIT_SSH_COMMAND: ssh -i ~/.ssh/id_aur -o StrictHostKeyChecking=accept-new
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          
+          # If manual trigger, find all -git directories. Otherwise, find only modified ones.
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual trigger: Scanning all -git packages..."
+            changed_dirs=$(find packages -type d -name "*-git")
+          else
+            echo "Push trigger: Finding modified -git packages..."
+            # Get list of files modified in the push, filter to packages/*/*-git/
+            changed_dirs=$(git diff-tree --no-commit-id --name-only -r HEAD | grep -E '^packages/[^/]+/[^/]+-git/' | cut -d/ -f1-3 | sort -u || true)
+          fi
+          
+          if [ -z "$changed_dirs" ]; then
+            echo "No modified git packages found."
+            exit 0
+          fi
+          
+          for dir in $changed_dirs; do
+            if [ -f "$dir/PKGBUILD" ]; then
+              echo "::group::Syncing $dir"
+              pkgname=$(grep -oP '^pkgname=\K.*' "$dir/PKGBUILD")
+              
+              echo "Regenerating .SRCINFO for $pkgname..."
+              sudo -u build bash -c "cd $dir && makepkg --printsrcinfo > .SRCINFO"
+              
+              echo "Cloning AUR repository..."
+              git clone aur@aur.archlinux.org:$pkgname.git aur_repo
+              
+              find aur_repo -maxdepth 1 -not -name ".git" -not -name "aur_repo" -exec rm -rf {} +
+              cp $dir/PKGBUILD aur_repo/
+              cp $dir/.SRCINFO aur_repo/
+              
+              cd aur_repo
+              git config user.name "${{ secrets.AUR_USERNAME }}"
+              git config user.email "${{ secrets.AUR_EMAIL }}"
+              git add PKGBUILD .SRCINFO
+              
+              if git diff --staged --quiet; then
+                echo "No changes to push for $pkgname"
+              else
+                pkgver=$(grep -oP '^pkgver=\K.*' PKGBUILD)
+                pkgrel=$(grep -oP '^pkgrel=\K.*' PKGBUILD)
+                git commit -m "Update to $pkgver-$pkgrel"
+                git push origin master
+                echo "Successfully synced $pkgname to AUR!"
+              fi
+              
+              cd ..
+              rm -rf aur_repo
+              echo "::endgroup::"
+            fi
+          done

@@ -39,7 +39,7 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           
           updated_list=()
-          for dir in */; do
+          for dir in packages/*/*/; do
             dir=${dir%/}
             if [[ -f "$dir/PKGBUILD" && -f "$dir/version.sh" ]]; then
               echo "::group::Checking $dir"
