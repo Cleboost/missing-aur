@@ -5,11 +5,11 @@ on:
     branches:
       - main
     paths:
-      - 'packages/*/git/**'
+      - 'packages/*/manifest.yaml'
   workflow_dispatch:
 
 jobs:
-  sync-git-packages:
+  sync-packages:
     runs-on: ubuntu-latest
     container:
       image: archlinux:latest
@@ -18,13 +18,12 @@ jobs:
         run: pacman -Syu --noconfirm git
 
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Install dependencies
-        run: |
-          pacman -S --noconfirm base-devel curl jq openssh sudo pacman-contrib
+        run: pacman -S --noconfirm base-devel curl jq python-yaml openssh sudo pacman-contrib
 
       - name: Setup build user
         run: |
@@ -38,62 +37,59 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/id_aur
           chmod 600 ~/.ssh/id_aur
-          echo "Host aur.archlinux.org
-            IdentityFile ~/.ssh/id_aur
-            User aur" > ~/.ssh/config
+          printf "Host aur.archlinux.org\n  IdentityFile ~/.ssh/id_aur\n  User aur\n" > ~/.ssh/config
           ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
 
-      - name: Find and Publish Modified Git Packages
+      - name: Find modified manifests and publish
         env:
           GIT_SSH_COMMAND: ssh -i ~/.ssh/id_aur -o StrictHostKeyChecking=accept-new
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          
-          # If manual trigger, find all git directories. Otherwise, find only modified ones.
+
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "Manual trigger: Scanning all git packages..."
-            changed_dirs=$(find packages -type d -name "git")
+            manifests=$(find packages -name "manifest.yaml")
           else
-            echo "Push trigger: Finding modified git packages..."
-            # Get list of files modified in the push, filter to packages/*/git/
-            changed_dirs=$(git diff-tree --no-commit-id --name-only -r HEAD | grep -E '^packages/[^/]+/git/' | cut -d/ -f1-3 | sort -u || true)
+            manifests=$(git diff-tree --no-commit-id --name-only -r HEAD \
+              | grep -E '^packages/[^/]+/manifest\.yaml$' || true)
           fi
-          
-          if [ -z "$changed_dirs" ]; then
-            echo "No modified git packages found."
+
+          if [ -z "$manifests" ]; then
+            echo "No modified manifests found."
             exit 0
           fi
-          
-          for dir in $changed_dirs; do
-            if [ -f "$dir/manifest.json" ]; then
-              echo "::group::Syncing $dir"
-              sudo -E -u build ./manage.sh generate "$dir" --force
-              pkgname=$(grep -oP '^pkgname=\K.*' "$dir/PKGBUILD")
-              
-              echo "Cloning AUR repository..."
-              git clone aur@aur.archlinux.org:$pkgname.git aur_repo
-              
-              find aur_repo -maxdepth 1 -not -name ".git" -not -name "aur_repo" -exec rm -rf {} +
-              cp $dir/PKGBUILD aur_repo/
-              cp $dir/.SRCINFO aur_repo/
-              
+
+          for manifest in $manifests; do
+            app_dir=$(dirname "$manifest")
+            echo "::group::Processing $app_dir"
+            sudo -E -u build python3 manage.py generate "$app_dir"
+
+            for pkgbuild in "$app_dir"/*/PKGBUILD; do
+              [ -f "$pkgbuild" ] || continue
+              pkg_dir=$(dirname "$pkgbuild")
+              pkgname=$(grep -oP '^pkgname=\K.*' "$pkgbuild")
+
+              git clone aur@aur.archlinux.org:${pkgname}.git aur_repo
+              find aur_repo -maxdepth 1 ! -name ".git" ! -name "aur_repo" -exec rm -rf {} +
+              cp "$pkg_dir/PKGBUILD" aur_repo/
+              cp "$pkg_dir/.SRCINFO" aur_repo/
+
               cd aur_repo
               git config user.name "${{ secrets.AUR_USERNAME }}"
               git config user.email "${{ secrets.AUR_EMAIL }}"
               git add PKGBUILD .SRCINFO
-              
+
               if git diff --staged --quiet; then
-                echo "No changes to push for $pkgname"
+                echo "No changes for ${pkgname}"
               else
                 pkgver=$(grep -oP '^pkgver=\K.*' PKGBUILD)
                 pkgrel=$(grep -oP '^pkgrel=\K.*' PKGBUILD)
-                git commit -m "Update to $pkgver-$pkgrel"
+                git commit -m "Update to ${pkgver}-${pkgrel}"
                 git push origin master
-                echo "Successfully synced $pkgname to AUR!"
+                echo "Synced ${pkgname} to AUR"
               fi
-              
+
               cd ..
               rm -rf aur_repo
-              echo "::endgroup::"
-            fi
+            done
+            echo "::endgroup::"
           done

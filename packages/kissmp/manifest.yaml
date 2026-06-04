@@ -1,0 +1,33 @@
+name: kissmp
+url: https://github.com/TheHellBox/KISS-multiplayer
+license: Apache-2.0
+options: ["!strip"]
+versionChecker: "curl -s https://api.github.com/repos/TheHellBox/KISS-multiplayer/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
+
+variants:
+  bridge-bin:
+    pkgver: "0.8.0"
+    pkgdesc: "Bridge for KissMP, a multiplayer mod for BeamNG.drive"
+    depends: [opus, alsa-lib]
+    provides: [kissmp-bridge]
+    conflicts: [kissmp-bridge]
+    source:
+      - "kissmp-bridge-bin-${pkgver}.zip::${url}/releases/download/v${pkgver}/KissMP_v${pkgver}.zip"
+    package: |
+      install -Dm755 "${srcdir}/linux/kissmp-bridge" "${pkgdir}/usr/bin/kissmp-bridge"
+      install -Dm644 "${srcdir}/KISSMultiplayer.zip" "${pkgdir}/usr/share/kissmp/KISSMultiplayer.zip"
+
+  server-bin:
+    pkgver: "0.8.0"
+    pkgdesc: "Server for KissMP, a multiplayer mod for BeamNG.drive"
+    arch: [x86_64, aarch64]
+    provides: [kissmp-server]
+    conflicts: [kissmp-server]
+    source:
+      - "kissmp-server-bin-${pkgver}.zip::${url}/releases/download/v${pkgver}/KissMP_v${pkgver}.zip"
+    package: |
+      if [ "${CARCH}" = "x86_64" ]; then
+          install -Dm755 "${srcdir}/linux/kissmp-server" "${pkgdir}/usr/bin/kissmp-server"
+      elif [ "${CARCH}" = "aarch64" ]; then
+          install -Dm755 "${srcdir}/linux-arm/kissmp-server" "${pkgdir}/usr/bin/kissmp-server"
+      fi

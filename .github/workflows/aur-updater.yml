@@ -17,13 +17,12 @@ jobs:
         run: pacman -Syu --noconfirm git
 
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Install dependencies
-        run: |
-          pacman -S --noconfirm base-devel curl jq sudo pacman-contrib
+        run: pacman -S --noconfirm base-devel curl jq python-yaml sudo pacman-contrib
 
       - name: Setup build user
         run: |
@@ -34,13 +33,12 @@ jobs:
 
       - name: Check for updates
         id: check-updates
-        shell: bash
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          sudo -E -u build ./manage.sh check-updates --ci
+          sudo -E -u build python3 manage.py check-updates --ci
 
-      - name: Commit and Push to GitHub
-        if: steps.check-updates.outputs.packages != '[]'
+      - name: Commit and push to GitHub
+        if: steps.check-updates.outputs.packages != '[]' && steps.check-updates.outputs.packages != ''
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -49,7 +47,7 @@ jobs:
           git push
 
       - name: Upload generated package files
-        if: steps.check-updates.outputs.packages != '[]'
+        if: steps.check-updates.outputs.packages != '[]' && steps.check-updates.outputs.packages != ''
         uses: actions/upload-artifact@v4
         with:
           name: generated-packages
@@ -59,14 +57,14 @@ jobs:
 
   publish-aur:
     needs: update-packages
-    if: needs.update-packages.outputs.updated_packages != '[]'
+    if: needs.update-packages.outputs.updated_packages != '[]' && needs.update-packages.outputs.updated_packages != ''
     runs-on: ubuntu-latest
     strategy:
       matrix:
         package: ${{ fromJson(needs.update-packages.outputs.updated_packages) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.ref_name }}
 
@@ -80,30 +78,30 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/id_aur
           chmod 600 ~/.ssh/id_aur
-          echo "Host aur.archlinux.org
-            IdentityFile ~/.ssh/id_aur
-            User aur" > ~/.ssh/config
+          printf "Host aur.archlinux.org\n  IdentityFile ~/.ssh/id_aur\n  User aur\n" > ~/.ssh/config
           ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
 
-      - name: Clone and Push to AUR
+      - name: Push to AUR
         env:
           GIT_SSH_COMMAND: ssh -i ~/.ssh/id_aur -o StrictHostKeyChecking=accept-new
         run: |
-          git clone aur@aur.archlinux.org:${{ matrix.package.pkgname }}.git aur_repo
-          
-          find aur_repo -maxdepth 1 -not -name ".git" -not -name "aur_repo" -exec rm -rf {} +
-          cp ${{ matrix.package.dir }}/PKGBUILD aur_repo/
-          cp ${{ matrix.package.dir }}/.SRCINFO aur_repo/
-          
+          pkg_dir="${{ matrix.package.dir }}"
+          pkgname="${{ matrix.package.pkgname }}"
+
+          git clone aur@aur.archlinux.org:${pkgname}.git aur_repo
+          find aur_repo -maxdepth 1 ! -name ".git" ! -name "aur_repo" -exec rm -rf {} +
+          cp "${pkg_dir}/PKGBUILD" aur_repo/
+          cp "${pkg_dir}/.SRCINFO" aur_repo/
+
           cd aur_repo
           git config user.name "${{ secrets.AUR_USERNAME }}"
           git config user.email "${{ secrets.AUR_EMAIL }}"
           git add PKGBUILD .SRCINFO
-          
+
           if git diff --staged --quiet; then
-            echo "No changes for ${{ matrix.package.pkgname }}"
+            echo "No changes for ${pkgname}"
           else
             pkgver=$(grep -oP '^pkgver=\K.*' PKGBUILD)
-            git commit -m "Update to $pkgver"
+            git commit -m "Update to ${pkgver}"
             git push origin master
           fi
