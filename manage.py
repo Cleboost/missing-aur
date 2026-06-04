@@ -182,14 +182,17 @@ def update_manifest_version(manifest_path: Path, variant_key: str | None, new_ve
 
 # ── Processing ────────────────────────────────────────────────────────────────
 
-def process_package(manifest_path: Path, variant_key: str | None, pkg: dict, force: bool) -> dict | None:
+def process_package(manifest_path: Path, variant_key: str | None, pkg: dict, force: bool, version_only: bool = False) -> dict | None:
     app_dir = manifest_path.parent
     pkgname = pkg["pkgname"]
     out_dir = app_dir / pkgname
     out_dir.mkdir(exist_ok=True)
 
     new_ver = check_version(pkg, app_dir)
-    changed = force or new_ver is not None or not (out_dir / "PKGBUILD").exists()
+    if version_only:
+        changed = new_ver is not None
+    else:
+        changed = force or new_ver is not None or not (out_dir / "PKGBUILD").exists()
 
     if new_ver:
         print(f"  {pkgname}: {pkg.get('pkgver')} → {new_ver}")
@@ -251,7 +254,7 @@ def cmd_check_updates(args):
     updated = []
     for manifest in find_manifests():
         for key, pkg in load_packages(manifest):
-            if result := process_package(manifest, key, pkg, force=False):
+            if result := process_package(manifest, key, pkg, force=False, version_only=True):
                 updated.append(result)
 
     if args.ci:
