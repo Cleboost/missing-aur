@@ -1,0 +1,24 @@
+{
+  "pkgname": "temper-bin",
+  "pkgver": "0.1.1",
+  "pkgrel": 1,
+  "pkgdesc": "A stupidly fast open-source Minecraft server, written in Rust (binary version)",
+  "arch": ["x86_64", "aarch64"],
+  "url": "https://github.com/temper-mc/temper",
+  "license": "GPL3",
+  "conflicts": ["temper"],
+  "provides": ["temper"],
+  "options": ["!strip"],
+  "source": {
+    "x86_64": [
+      "${pkgname}-${pkgver}-x86_64.tar.gz::https://github.com/temper-mc/temper/releases/download/v${pkgver}/temper-x86_64-unknown-linux-gnu.tar.gz"
+    ],
+    "aarch64": [
+      "${pkgname}-${pkgver}-aarch64.tar.gz::https://github.com/temper-mc/temper/releases/download/v${pkgver}/temper-aarch64-unknown-linux-gnu.tar.gz"
+    ]
+  },
+  "versionChecker": "curl -s https://api.github.com/repos/temper-mc/temper/releases/latest | jq -r '.tag_name' | sed 's/^v//'",
+  "package": [
+    "install -Dm755 \"${srcdir}/temper\" \"${pkgdir}/usr/bin/temper\""
+  ]
+}

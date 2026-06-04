@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'packages/*/*-git/**'
+      - 'packages/*/git/**'
   workflow_dispatch:
 
 jobs:
@@ -49,14 +49,14 @@ jobs:
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           
-          # If manual trigger, find all -git directories. Otherwise, find only modified ones.
+          # If manual trigger, find all git directories. Otherwise, find only modified ones.
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "Manual trigger: Scanning all -git packages..."
-            changed_dirs=$(find packages -type d -name "*-git")
+            echo "Manual trigger: Scanning all git packages..."
+            changed_dirs=$(find packages -type d -name "git")
           else
-            echo "Push trigger: Finding modified -git packages..."
-            # Get list of files modified in the push, filter to packages/*/*-git/
-            changed_dirs=$(git diff-tree --no-commit-id --name-only -r HEAD | grep -E '^packages/[^/]+/[^/]+-git/' | cut -d/ -f1-3 | sort -u || true)
+            echo "Push trigger: Finding modified git packages..."
+            # Get list of files modified in the push, filter to packages/*/git/
+            changed_dirs=$(git diff-tree --no-commit-id --name-only -r HEAD | grep -E '^packages/[^/]+/git/' | cut -d/ -f1-3 | sort -u || true)
           fi
           
           if [ -z "$changed_dirs" ]; then
@@ -65,12 +65,10 @@ jobs:
           fi
           
           for dir in $changed_dirs; do
-            if [ -f "$dir/PKGBUILD" ]; then
+            if [ -f "$dir/manifest.json" ]; then
               echo "::group::Syncing $dir"
+              sudo -E -u build ./manage.sh generate "$dir" --force
               pkgname=$(grep -oP '^pkgname=\K.*' "$dir/PKGBUILD")
-              
-              echo "Regenerating .SRCINFO for $pkgname..."
-              sudo -u build bash -c "cd $dir && makepkg --printsrcinfo > .SRCINFO"
               
               echo "Cloning AUR repository..."
               git clone aur@aur.archlinux.org:$pkgname.git aur_repo

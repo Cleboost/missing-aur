@@ -37,38 +37,7 @@ jobs:
         shell: bash
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          
-          updated_list=()
-          for dir in packages/*/*/; do
-            dir=${dir%/}
-            if [[ -f "$dir/PKGBUILD" && -f "$dir/version.sh" ]]; then
-              echo "::group::Checking $dir"
-              pkgver=$(grep -oP '^pkgver=\K.*' "$dir/PKGBUILD")
-              latest_ver=$(sudo -u build bash -c "cd $dir && bash ./version.sh")
-              
-              if [[ "$pkgver" != "$latest_ver" ]]; then
-                echo "New version detected for $dir: $pkgver -> $latest_ver"
-                sed -i "s/^pkgver=.*/pkgver=$latest_ver/" "$dir/PKGBUILD"
-                sed -i "s/^pkgrel=.*/pkgrel=1/" "$dir/PKGBUILD"
-                
-                sudo -u build bash -c "cd $dir && updpkgsums"
-                sudo -u build bash -c "cd $dir && makepkg --printsrcinfo > .SRCINFO"
-                
-                real_pkgname=$(grep -oP '^pkgname=\K.*' "$dir/PKGBUILD")
-                updated_list+=("{\"dir\": \"$dir\", \"pkgname\": \"$real_pkgname\"}")
-              else
-                echo "Already up to date ($pkgver)"
-              fi
-              echo "::endgroup::"
-            fi
-          done
-          
-          if [ ${#updated_list[@]} -eq 0 ]; then
-            echo "packages=[]" >> $GITHUB_OUTPUT
-          else
-            printf -v joined '%s,' "${updated_list[@]}"
-            echo "packages=[${joined%,}]" >> $GITHUB_OUTPUT
-          fi
+          sudo -E -u build ./manage.sh check-updates --ci
 
       - name: Commit and Push to GitHub
         if: steps.check-updates.outputs.packages != '[]'
@@ -78,6 +47,15 @@ jobs:
           git add .
           git commit -m "chore: update packages"
           git push
+
+      - name: Upload generated package files
+        if: steps.check-updates.outputs.packages != '[]'
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-packages
+          path: |
+            packages/*/*/PKGBUILD
+            packages/*/*/.SRCINFO
 
   publish-aur:
     needs: update-packages
@@ -91,6 +69,11 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: ${{ github.ref_name }}
+
+      - name: Download generated package files
+        uses: actions/download-artifact@v4
+        with:
+          name: generated-packages
 
       - name: Setup SSH
         run: |

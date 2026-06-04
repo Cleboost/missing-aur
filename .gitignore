@@ -17,12 +17,13 @@ packages/**/*
 # Allow package directories themselves so git can traverse them
 !packages/*/
 !packages/*/*/
+!packages/*/*/*/
 
 # Explicitly whitelist the files we want to track in package directories
-!packages/*/*/PKGBUILD
-!packages/*/*/.SRCINFO
-!packages/*/*/version.sh
-!packages/*/*/*.desktop
-!packages/*/*/*.install
-!packages/*/*/*.patch
-!packages/*/*/*.diff
+!packages/**/manifest.json
+!packages/**/*.desktop
+!packages/**/*.install
+!packages/**/*.patch
+!packages/**/*.diff
+!packages/**/*.png
+!packages/**/*.svg
