@@ -28,12 +28,9 @@ body:
     attributes:
       label: Latest version
       placeholder: "e.g. 1.2.3"
-    validations:
-      required: false
 
   - type: textarea
     id: notes
     attributes:
       label: Additional notes
       description: Download URL pattern, special build steps, dependencies, etc.
-      required: false

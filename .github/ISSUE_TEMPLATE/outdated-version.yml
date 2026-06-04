@@ -31,12 +31,9 @@ body:
     attributes:
       label: Upstream release URL
       placeholder: "https://github.com/author/repo/releases/tag/v1.3.0"
-    validations:
-      required: false
 
   - type: textarea
     id: notes
     attributes:
       label: Additional notes
       description: If you think the versionChecker is broken (e.g. upstream changed their tag format), mention it here.
-      required: false
