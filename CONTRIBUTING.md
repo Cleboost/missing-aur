@@ -211,3 +211,4 @@ python3 manage.py clean                     # remove all generated files
 - **One package per PR.**
 - Clear commit messages: `feat: add foo-bin`, `fix: update kissmp versionChecker`.
 - Run `python3 manage.py generate packages/<app>` locally and check the PKGBUILD before submitting.
+- **Don't forget to add the new app to the table in `README.md`** (one row per app, badges for each variant).
