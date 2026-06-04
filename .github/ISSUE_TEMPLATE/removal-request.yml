@@ -1,6 +1,7 @@
 name: "🗑️ Request package removal"
 description: "You are the upstream author or maintainer and want the AUR package removed entirely."
 labels: ["removal-request"]
+assignees: [Cleboost]
 body:
   - type: markdown
     attributes:
