@@ -70,7 +70,7 @@ jobs:
           ref: ${{ github.ref_name }}
 
       - name: Download generated package files
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: generated-packages
 
