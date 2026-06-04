@@ -24,13 +24,9 @@ body:
       label: Error output
       description: Paste the relevant output from `makepkg` or the error message.
       render: shell
-    validations:
-      required: false
 
   - type: input
     id: pkgver
     attributes:
       label: Package version
       placeholder: "e.g. 1.2.3-1"
-    validations:
-      required: false

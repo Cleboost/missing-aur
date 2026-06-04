@@ -27,4 +27,3 @@ body:
     id: reason
     attributes:
       label: Reason (optional)
-      required: false

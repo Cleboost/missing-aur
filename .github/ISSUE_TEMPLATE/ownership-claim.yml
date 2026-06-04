@@ -35,4 +35,3 @@ body:
     id: notes
     attributes:
       label: Additional notes
-      required: false
