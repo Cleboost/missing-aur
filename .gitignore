@@ -7,7 +7,7 @@
 *.sig
 *.pkg.tar.*
 
-# Ignore everything inside package dirs by default (generated PKGBUILD, downloaded sources, etc.)
+# Ignore everything inside package dirs by default
 packages/**/*
 
 # Allow app-level dirs and their direct files (manifest.yaml, assets)
@@ -20,7 +20,4 @@ packages/**/*
 !packages/*/*.png
 !packages/*/*.svg
 
-# Allow generated variant dirs (packages/<app>/<pkgname>/) and their tracked files
-!packages/*/*/
-!packages/*/*/PKGBUILD
-!packages/*/*/.SRCINFO
+# Generated variant dirs (packages/<app>/<pkgname>/) are never committed

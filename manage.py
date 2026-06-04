@@ -166,18 +166,37 @@ def check_version(pkg: dict, cwd: Path) -> str | None:
 
 
 def update_manifest_version(manifest_path: Path, variant_key: str | None, new_ver: str) -> None:
-    if variant_key is None:
-        content = manifest_path.read_text()
-        content = re.sub(r"^(pkgver:\s*).*$", f"\\g<1>{new_ver}", content, flags=re.MULTILINE)
-        content = re.sub(r"^(pkgrel:\s*).*$", "\\g<1>1", content, flags=re.MULTILINE)
-        manifest_path.write_text(content)
-    else:
-        data = yaml.safe_load(manifest_path.read_text())
-        data["variants"][variant_key]["pkgver"] = new_ver
-        data["variants"][variant_key]["pkgrel"] = 1
-        manifest_path.write_text(
-            yaml.dump(data, default_flow_style=False, allow_unicode=True, sort_keys=False)
-        )
+    """Update pkgver/pkgrel in-place using line-level regex — never reformats the file."""
+    lines = manifest_path.read_text().splitlines(keepends=True)
+    result = []
+    in_target = variant_key is None  # flat manifest: always in target
+    variant_indent: int | None = None
+
+    for line in lines:
+        stripped = line.lstrip()
+        indent = len(line) - len(stripped)
+
+        if variant_key and not in_target:
+            # Detect entry into the right variant block
+            if re.match(rf'\s*{re.escape(variant_key)}:\s*$', line):
+                in_target = True
+                variant_indent = indent
+                result.append(line)
+                continue
+        elif variant_key and in_target and variant_indent is not None:
+            # Detect exit from the variant block (non-empty line at same/lower indent)
+            if stripped and not stripped.startswith('#') and indent <= variant_indent:
+                in_target = False
+
+        if in_target:
+            if re.match(r'\s*pkgver:\s*', line):
+                line = re.sub(r'^(\s*pkgver:\s*).*$', f'\\g<1>{new_ver}', line)
+            elif re.match(r'\s*pkgrel:\s*', line):
+                line = re.sub(r'^(\s*pkgrel:\s*).*$', '\\g<1>1', line)
+
+        result.append(line)
+
+    manifest_path.write_text(''.join(result))
 
 
 # ── Processing ────────────────────────────────────────────────────────────────
