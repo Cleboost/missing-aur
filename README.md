@@ -1,25 +1,26 @@
 # missing-aur
 
-A collection of Arch Linux PKGBUILDs for software that is missing or outdated in the official AUR.
+A curated collection of Arch Linux packages missing from the AUR — automatically kept up to date.
+
+## Packages
+
+| App | Packages |
+|---|---|
+| **[ferrumc](https://github.com/ferrumc-rs/ferrumc)**<br>A reimplementation of the Minecraft server in Rust | [![ferrumc-bin](https://img.shields.io/aur/version/ferrumc-bin?style=flat-square&label=ferrumc-bin)](https://aur.archlinux.org/packages/ferrumc-bin) |
+| **[kibo](https://kiboanime.app)**<br>Application for watching anime | [![kibo-appimage](https://img.shields.io/aur/version/kibo-appimage?style=flat-square&label=kibo-appimage)](https://aur.archlinux.org/packages/kibo-appimage) |
+| **[kissmp](https://github.com/TheHellBox/KISS-multiplayer)**<br>Multiplayer mod for BeamNG.drive | [![kissmp-bridge-bin](https://img.shields.io/aur/version/kissmp-bridge-bin?style=flat-square&label=kissmp-bridge-bin)](https://aur.archlinux.org/packages/kissmp-bridge-bin) [![kissmp-server-bin](https://img.shields.io/aur/version/kissmp-server-bin?style=flat-square&label=kissmp-server-bin)](https://aur.archlinux.org/packages/kissmp-server-bin) |
+| **[psst](https://github.com/jpochyla/psst)**<br>Fast and multi-platform Spotify client with native GUI | [![psst-bin](https://img.shields.io/aur/version/psst-bin?style=flat-square&label=psst-bin)](https://aur.archlinux.org/packages/psst-bin) |
+| **[temper](https://github.com/temper-mc/temper)**<br>Stupidly fast open-source Minecraft server written in Rust | [![temper-bin](https://img.shields.io/aur/version/temper-bin?style=flat-square&label=temper-bin)](https://aur.archlinux.org/packages/temper-bin) [![temper-git](https://img.shields.io/aur/version/temper-git?style=flat-square&label=temper-git)](https://aur.archlinux.org/packages/temper-git) |
 
 ## How it works
 
-This repository uses a GitHub Action that runs daily to:
-1. Check for new versions using a `version.sh` script in each package directory.
-2. Automatically update `pkgver` and `pkgrel` in the `PKGBUILD`.
-3. Recalculate SHA-256 checksums.
-4. Update `.SRCINFO`.
-5. Push updates back to this repository and sync them directly with the AUR.
+A GitHub Action runs every night and:
 
-## Available Packages
-
-- **[kibo-appimage](https://www.kiboanime.app/)**: Kibo Anime AppImage - Application for watching anime.
-- **[kissmp-bridge-bin](https://github.com/TheHellBox/KISS-multiplayer)**: Bridge for KissMP, a multiplayer mod for BeamNG.drive (binary version).
-- **[kissmp-server-bin](https://github.com/TheHellBox/KISS-multiplayer)**: Server for KissMP, a multiplayer mod for BeamNG.drive (binary version).
-- **[psst-bin](https://github.com/jpochyla/psst)**: Fast and multi-platform Spotify client with native GUI (binary version).
-- **[temper-bin](https://github.com/temper-mc/temper)**: A stupidly fast open-source Minecraft server, written in Rust (binary version).
-- **[temper-git](https://github.com/temper-mc/temper)**: A stupidly fast open-source Minecraft server, written in Rust (git version).
+1. Runs the `versionChecker` of each package against the upstream source
+2. If a new version is found, regenerates the PKGBUILD and updates the checksums
+3. Pushes the updated package to the AUR
+4. Commits the version bump to this repo
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to add new packages.
+See [CONTRIBUTING.md](CONTRIBUTING.md) to add a new package. The short version: create `packages/<app>/manifest.yaml`, run `python3 manage.py generate packages/<app>`, done.
