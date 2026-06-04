@@ -6,73 +6,28 @@ on:
   workflow_dispatch:
 
 jobs:
-  update-packages:
+  update-and-publish:
     runs-on: ubuntu-latest
     container:
       image: archlinux:latest
-    outputs:
-      updated_packages: ${{ steps.check-updates.outputs.packages }}
     steps:
       - name: Install Git
         run: pacman -Syu --noconfirm git
 
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Install dependencies
-        run: pacman -S --noconfirm base-devel curl jq python-yaml sudo pacman-contrib
+        run: pacman -S --noconfirm base-devel curl jq python-yaml openssh sudo pacman-contrib
 
       - name: Setup build user
         run: |
           useradd -m build
           echo "build ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/build
           chown -R build:build "$GITHUB_WORKSPACE"
-          sudo -u build bash -c "git config --global --add safe.directory $GITHUB_WORKSPACE"
-
-      - name: Check for updates
-        id: check-updates
-        run: |
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          sudo -E -u build python3 manage.py check-updates --ci 2>&1 | tee /tmp/check_output.log
-          grep '^packages=' /tmp/check_output.log >> "$GITHUB_OUTPUT" || echo "packages=[]" >> "$GITHUB_OUTPUT"
-
-      - name: Commit and push to GitHub
-        if: steps.check-updates.outputs.packages != '[]' && steps.check-updates.outputs.packages != ''
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add packages/*/manifest.yaml
-          git commit -m "chore: update packages"
-          git push
-
-      - name: Upload generated package files
-        if: steps.check-updates.outputs.packages != '[]' && steps.check-updates.outputs.packages != ''
-        uses: actions/upload-artifact@v7
-        with:
-          name: generated-packages
-          path: |
-            packages/*/*/PKGBUILD
-            packages/*/*/.SRCINFO
-
-  publish-aur:
-    needs: update-packages
-    if: needs.update-packages.outputs.updated_packages != '[]' && needs.update-packages.outputs.updated_packages != ''
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        package: ${{ fromJson(needs.update-packages.outputs.updated_packages) }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ github.ref_name }}
-
-      - name: Download generated package files
-        uses: actions/download-artifact@v8
-        with:
-          name: generated-packages
+          sudo -u build git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Setup SSH
         run: |
@@ -82,32 +37,78 @@ jobs:
           printf "Host aur.archlinux.org\n  IdentityFile ~/.ssh/id_aur\n  User aur\n" > ~/.ssh/config
           ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
 
-      - name: Push to AUR
+      - name: Check for updates and publish
         env:
           GIT_SSH_COMMAND: ssh -i ~/.ssh/id_aur -o StrictHostKeyChecking=accept-new
         run: |
-          pkg_dir="${{ matrix.package.dir }}"
-          pkgname="${{ matrix.package.pkgname }}"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          sudo -E -u build python3 manage.py check-updates --ci 2>&1 | tee /tmp/check_output.log
+          packages=$(grep '^packages=' /tmp/check_output.log | sed 's/^packages=//' || echo '[]')
 
-          git clone aur@aur.archlinux.org:${pkgname}.git aur_repo
-          find aur_repo -maxdepth 1 ! -name ".git" ! -name "aur_repo" -exec rm -rf {} +
-          cp "${pkg_dir}/PKGBUILD" aur_repo/
-          cp "${pkg_dir}/.SRCINFO" aur_repo/
+          if [ "$packages" = "[]" ] || [ -z "$packages" ]; then
+            echo "No updates found."
+            exit 0
+          fi
 
-          # Copy local source files (non-URL entries in .SRCINFO)
-          grep -E '^\s+source = ' "${pkg_dir}/.SRCINFO" | grep -v '://' | sed 's/.*= //' | while read -r src; do
-            [[ "$src" != *"::"* ]] && [ -f "${pkg_dir}/$src" ] && cp "${pkg_dir}/$src" aur_repo/
+          echo "Updated packages: $packages"
+
+          echo "$packages" | python3 -c "
+          import sys, json
+          packages = json.load(sys.stdin)
+          for p in packages:
+              print(p['pkgname'] + '|' + p['dir'])
+          " | while IFS='|' read -r pkgname pkg_dir; do
+            echo "::group::Pushing $pkgname to AUR"
+
+            git clone aur@aur.archlinux.org:${pkgname}.git aur_repo
+            find aur_repo -maxdepth 1 ! -name ".git" ! -name "aur_repo" -exec rm -rf {} +
+            cp "${pkg_dir}/PKGBUILD" aur_repo/
+            cp "${pkg_dir}/.SRCINFO" aur_repo/
+
+            grep -E '^\s+source = ' "${pkg_dir}/.SRCINFO" | grep -v '://' | sed 's/.*= //' | while read -r src; do
+              [[ "$src" != *"::"* ]] && [ -f "${pkg_dir}/$src" ] && cp "${pkg_dir}/$src" aur_repo/
+            done
+
+            cd aur_repo
+            git config user.name "${{ secrets.AUR_USERNAME }}"
+            git config user.email "${{ secrets.AUR_EMAIL }}"
+            git add -A
+
+            if git diff --staged --quiet; then
+              echo "No changes for ${pkgname}"
+            else
+              pkgver=$(grep -oP '^pkgver=\K.*' PKGBUILD)
+              git commit -m "Update to ${pkgver}"
+              git push origin master
+              echo "Pushed ${pkgname} to AUR"
+            fi
+
+            cd ..
+            rm -rf aur_repo
+            echo "::endgroup::"
           done
 
-          cd aur_repo
-          git config user.name "${{ secrets.AUR_USERNAME }}"
-          git config user.email "${{ secrets.AUR_EMAIL }}"
-          git add -A
-
-          if git diff --staged --quiet; then
-            echo "No changes for ${pkgname}"
-          else
-            pkgver=$(grep -oP '^pkgver=\K.*' PKGBUILD)
-            git commit -m "Update to ${pkgver}"
-            git push origin master
+      - name: Commit manifest changes to GitHub
+        run: |
+          packages=$(grep '^packages=' /tmp/check_output.log | sed 's/^packages=//' || echo '[]')
+          if [ "$packages" = "[]" ] || [ -z "$packages" ]; then
+            exit 0
           fi
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          echo "$packages" | python3 -c "
+          import sys, json
+          packages = json.load(sys.stdin)
+          for p in packages:
+              print(p['pkgname'] + '|' + p['pkgver'] + '|' + p['dir'])
+          " | while IFS='|' read -r pkgname pkgver pkg_dir; do
+            app_dir=$(dirname "$pkg_dir")
+            git add "${app_dir}/manifest.yaml"
+            if ! git diff --staged --quiet; then
+              old_ver=$(git diff --staged -- "${app_dir}/manifest.yaml" | grep '^-pkgver' | grep -oP ':\s*\K\S+' || echo "?")
+              git commit -m "chore(${pkgname}): bump ${old_ver} → ${pkgver}"
+            fi
+          done
+
+          git push
