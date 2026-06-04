@@ -35,7 +35,8 @@ jobs:
         id: check-updates
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          sudo -E -u build python3 manage.py check-updates --ci
+          sudo -E -u build python3 manage.py check-updates --ci 2>&1 | tee /tmp/check_output.log
+          grep '^packages=' /tmp/check_output.log >> "$GITHUB_OUTPUT" || echo "packages=[]" >> "$GITHUB_OUTPUT"
 
       - name: Commit and push to GitHub
         if: steps.check-updates.outputs.packages != '[]' && steps.check-updates.outputs.packages != ''

@@ -258,11 +258,7 @@ def cmd_check_updates(args):
                 updated.append(result)
 
     if args.ci:
-        out_json = json.dumps(updated)
-        print(f"packages={out_json}")
-        if gh_out := os.environ.get("GITHUB_OUTPUT"):
-            with open(gh_out, "a") as f:
-                f.write(f"packages={out_json}\n")
+        print(f"packages={json.dumps(updated)}")
 
 
 def cmd_clean(args):
