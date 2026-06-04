@@ -154,13 +154,30 @@ If the description already ends with `)`, nothing is appended.
 
 ## Local assets
 
-Files like `.desktop`, `.patch` or `.png` placed in `packages/<app>/` are copied
-into the build dir automatically and can be referenced by filename in `source`:
+Files like `.patch` or `.png` placed in `packages/<app>/` are copied into the
+build dir automatically and pushed to the AUR repo alongside the PKGBUILD. They
+can be referenced by filename in `source`:
 
 ```yaml
 source:
   - "foo-${pkgver}.tar.gz::https://..."
-  - foo.desktop        # local file in packages/foo/
+  - foo.patch          # local file in packages/foo/
+```
+
+For simple text files like `.desktop` entries, prefer inlining the content
+directly in `package()` via a heredoc — no extra file needed anywhere:
+
+```yaml
+package: |
+  # ... other install commands ...
+  install -Dm644 /dev/stdin "${pkgdir}/usr/share/applications/foo.desktop" << 'EOF'
+  [Desktop Entry]
+  Name=Foo
+  Exec=foo
+  Icon=foo
+  Type=Application
+  Categories=Utility;
+  EOF
 ```
 
 ## versionChecker
