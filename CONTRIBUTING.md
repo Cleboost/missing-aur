@@ -14,7 +14,10 @@ packages/
 ```
 
 The generated subdirectories `packages/<app>/<pkgname>/` (PKGBUILD, .SRCINFO)
-are **fully generated** — never edit them by hand.
+are **fully generated** — never edit them by hand, and **never commit them**.
+They are produced by `manage.py` on demand locally and by the CI on the server.
+Committing them would cause conflicts and drift from what the generator produces.
+The `.gitignore` is already configured to ignore them.
 
 ## How it works
 
