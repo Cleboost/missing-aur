@@ -1,0 +1,36 @@
+name: "Bug report"
+description: "A package is broken, fails to build, or has a missing/wrong dependency."
+labels: ["bug"]
+body:
+  - type: input
+    id: package
+    attributes:
+      label: Package name
+      placeholder: "e.g. psst-bin"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What is broken?
+      description: What did you expect to happen? What happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: error
+    attributes:
+      label: Error output
+      description: Paste the relevant output from `makepkg` or the error message.
+      render: shell
+    validations:
+      required: false
+
+  - type: input
+    id: pkgver
+    attributes:
+      label: Package version
+      placeholder: "e.g. 1.2.3-1"
+    validations:
+      required: false
