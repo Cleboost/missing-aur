@@ -27,7 +27,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) to add a new package. The short version: 
 
 ## Upstream maintainers
 
-All packages in this repository are maintained on a best-effort basis for software that has no AUR presence. If you are the upstream author or maintainer of a packaged project, you have three options — just open a GitHub issue:
+All packages in this repository are maintained on a best-effort basis for software that has no AUR presence. We genuinely enjoy maintaining these packages and keeping them up to date for the community. If you are the upstream author or maintainer of a packaged project, you have three options — just open a GitHub issue:
 
 - **Claim ownership** — we transfer the AUR package to you and remove it from this repository. You take over maintenance from there.
 - **Let us handle it** — happy for missing-aur to keep maintaining the AUR package? Just say so and we'll take care of everything, nothing to do on your end.
