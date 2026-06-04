@@ -80,8 +80,14 @@ def _fmt_array(values) -> str:
 
 def _write_func(body, name: str) -> str:
     lines = body.strip().splitlines() if isinstance(body, str) else [l for l in body if l is not None]
-    indented = "\n".join(f"  {l}" for l in lines)
-    return f"{name}() {{\n{indented}\n}}\n"
+    result = []
+    for line in lines:
+        # Heredoc terminators must not be indented
+        if line.strip() in ("EOF", "'EOF'", '"EOF"'):
+            result.append(line.strip())
+        else:
+            result.append(f"  {line}")
+    return f"{name}() {{\n" + "\n".join(result) + "\n}\n"
 
 
 def _inject_desc_suffix(pkg: dict) -> None:
