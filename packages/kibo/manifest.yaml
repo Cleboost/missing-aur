@@ -13,7 +13,6 @@ variants:
     source:
       - "kibo-appimage-${pkgver}.AppImage::https://apk.kiboanime.app/downloadpc/Kibo-${pkgver}.AppImage"
       - "kibo.svg::https://www.kiboanime.app/group-2.svg"
-      - kibo.desktop
     prepare: |
       chmod +x "${srcdir}/kibo-appimage-${pkgver}.AppImage"
     package: |
@@ -21,4 +20,13 @@ variants:
       install -dm755 "${pkgdir}/usr/bin"
       ln -sf "/opt/kibo-appimage/kibo.AppImage" "${pkgdir}/usr/bin/kibo"
       install -Dm644 "${srcdir}/kibo.svg" "${pkgdir}/usr/share/icons/hicolor/scalable/apps/kibo.svg"
-      install -Dm644 "${srcdir}/kibo.desktop" "${pkgdir}/usr/share/applications/kibo.desktop"
+      install -Dm644 /dev/stdin "${pkgdir}/usr/share/applications/kibo.desktop" << 'EOF'
+      [Desktop Entry]
+      Name=Kibo Anime
+      Comment=Application for watching anime
+      Exec=kibo
+      Icon=kibo
+      Terminal=false
+      Type=Application
+      Categories=AudioVideo;Video;Player;
+      EOF
