@@ -1,0 +1,39 @@
+name: "Request a missing package"
+description: "A package you need is missing from the AUR and you'd like missing-aur to maintain it."
+labels: ["package-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We'll look into adding it. The more details you provide, the faster we can get it done.
+
+  - type: input
+    id: name
+    attributes:
+      label: Package name
+      placeholder: "e.g. psst-bin"
+    validations:
+      required: true
+
+  - type: input
+    id: upstream
+    attributes:
+      label: Upstream URL
+      placeholder: "https://github.com/author/repo"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Latest version
+      placeholder: "e.g. 1.2.3"
+    validations:
+      required: false
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional notes
+      description: Download URL pattern, special build steps, dependencies, etc.
+      required: false

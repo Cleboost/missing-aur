@@ -1,0 +1,38 @@
+name: "Claim AUR package ownership"
+description: "You are the upstream author or maintainer and want to take over the AUR package."
+labels: ["ownership-claim"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We'll transfer the AUR package to you and remove it from this repository. You'll take over maintenance from there.
+
+  - type: input
+    id: package
+    attributes:
+      label: Package name
+      placeholder: "e.g. psst-bin"
+    validations:
+      required: true
+
+  - type: input
+    id: aur-account
+    attributes:
+      label: Your AUR username
+      placeholder: "e.g. jpochyla"
+    validations:
+      required: true
+
+  - type: textarea
+    id: proof
+    attributes:
+      label: Proof of ownership
+      description: A link to your GitHub profile, upstream repo, or anything that confirms you are the author/maintainer.
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional notes
+      required: false
