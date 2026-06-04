@@ -1,19 +1,29 @@
 name: ferrumc
 url: https://github.com/ferrumc-rs/ferrumc
-license: [MIT]
-arch: [x86_64, aarch64]
-pkgdesc: "A reimplementation of the minecraft server in rust"
-
+license:
+- MIT
+arch:
+- x86_64
+- aarch64
+pkgdesc: A reimplementation of the minecraft server in rust
 variants:
   bin:
-    pkgver: "0"
-    provides: [ferrumc]
-    conflicts: [ferrumc, ferrumc-git]
-    versionChecker: "curl -s https://api.github.com/repos/ferrumc-rs/ferrumc/releases/latest | jq -r '.tag_name' | sed 's/^v//;s/-/./g'"
+    pkgver: 0.1.0.rc2
+    provides:
+    - ferrumc
+    conflicts:
+    - ferrumc
+    - ferrumc-git
+    versionChecker: curl -s https://api.github.com/repos/ferrumc-rs/ferrumc/releases/latest
+      | jq -r '.tag_name' | sed 's/^v//;s/-/./g'
     source:
       x86_64:
-        - 'ferrumc-bin-${pkgver}-x86_64.tar.gz::${url}/releases/download/v$(echo ${pkgver} | sed "s/\.\(rc\|beta\|alpha\)/-\1/")/ferrumc-v$(echo ${pkgver} | sed "s/\.\(rc\|beta\|alpha\)/-\1/")-x86_64-unknown-linux-musl.tar.gz'
+      - ferrumc-bin-${pkgver}-x86_64.tar.gz::${url}/releases/download/v$(echo ${pkgver}
+        | sed "s/\.\(rc\|beta\|alpha\)/-\1/")/ferrumc-v$(echo ${pkgver} | sed "s/\.\(rc\|beta\|alpha\)/-\1/")-x86_64-unknown-linux-musl.tar.gz
       aarch64:
-        - 'ferrumc-bin-${pkgver}-aarch64.tar.gz::${url}/releases/download/v$(echo ${pkgver} | sed "s/\.\(rc\|beta\|alpha\)/-\1/")/ferrumc-v$(echo ${pkgver} | sed "s/\.\(rc\|beta\|alpha\)/-\1/")-aarch64-unknown-linux-musl.tar.gz'
-    package: |
-      install -Dm755 "${srcdir}/ferrumc" "${pkgdir}/usr/bin/ferrumc"
+      - ferrumc-bin-${pkgver}-aarch64.tar.gz::${url}/releases/download/v$(echo ${pkgver}
+        | sed "s/\.\(rc\|beta\|alpha\)/-\1/")/ferrumc-v$(echo ${pkgver} | sed "s/\.\(rc\|beta\|alpha\)/-\1/")-aarch64-unknown-linux-musl.tar.gz
+    package: 'install -Dm755 "${srcdir}/ferrumc" "${pkgdir}/usr/bin/ferrumc"
+
+      '
+    pkgrel: 1
