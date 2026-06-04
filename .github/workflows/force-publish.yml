@@ -46,20 +46,7 @@ jobs:
             exit 1
           fi
           
-          sudo -u build bash -c "cd $dir && updpkgsums"
-          sudo -u build bash -c "cd $dir && makepkg --printsrcinfo > .SRCINFO"
-          
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add "$dir/PKGBUILD" "$dir/.SRCINFO"
-          
-          if git diff --staged --quiet; then
-            echo "No changes in PKGBUILD or .SRCINFO"
-          else
-            git commit -m "chore: force update checksums and .SRCINFO for $dir"
-            git push
-          fi
+          sudo -E -u build ./manage.sh generate "$dir" --force
 
       - name: Setup SSH
         run: |
