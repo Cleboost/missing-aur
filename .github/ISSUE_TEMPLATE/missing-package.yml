@@ -1,4 +1,4 @@
-name: "Request a missing package"
+name: "📦 Request a missing package"
 description: "A package you need is missing from the AUR and you'd like missing-aur to maintain it."
 labels: ["package-request"]
 body:

@@ -1,4 +1,4 @@
-name: "Version outdated"
+name: "🔄 Version outdated"
 description: "A package version is behind and the automatic updater hasn't caught it."
 labels: ["outdated"]
 body:

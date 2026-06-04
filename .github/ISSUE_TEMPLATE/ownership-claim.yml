@@ -1,4 +1,4 @@
-name: "Claim AUR package ownership"
+name: "🤝 Claim AUR package ownership"
 description: "You are the upstream author or maintainer and want to take over the AUR package."
 labels: ["ownership-claim"]
 body:

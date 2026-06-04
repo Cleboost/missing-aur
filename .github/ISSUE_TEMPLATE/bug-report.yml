@@ -1,4 +1,4 @@
-name: "Bug report"
+name: "🐛 Bug report"
 description: "A package is broken, fails to build, or has a missing/wrong dependency."
 labels: ["bug"]
 body:
