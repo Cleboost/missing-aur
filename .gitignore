@@ -1,29 +1,26 @@
 .idea/
 
-# Ignore Arch package build directories globally
+# Arch build artifacts
 **/src/
 **/pkg/
-
-# Ignore log files and signatures
 *.log
 *.sig
-
-# Ignore package archives
 *.pkg.tar.*
 
-# In the packages directory, ignore everything by default to prevent committing downloaded sources
+# Ignore everything inside package dirs by default (generated PKGBUILD, downloaded sources, etc.)
 packages/**/*
 
-# Allow package directories themselves so git can traverse them
+# Allow app-level dirs and their direct files (manifest.yaml, assets)
 !packages/*/
-!packages/*/*/
-!packages/*/*/*/
+!packages/*/manifest.yaml
+!packages/*/*.desktop
+!packages/*/*.install
+!packages/*/*.patch
+!packages/*/*.diff
+!packages/*/*.png
+!packages/*/*.svg
 
-# Explicitly whitelist the files we want to track in package directories
-!packages/**/manifest.json
-!packages/**/*.desktop
-!packages/**/*.install
-!packages/**/*.patch
-!packages/**/*.diff
-!packages/**/*.png
-!packages/**/*.svg
+# Allow generated variant dirs (packages/<app>/<pkgname>/) and their tracked files
+!packages/*/*/
+!packages/*/*/PKGBUILD
+!packages/*/*/.SRCINFO

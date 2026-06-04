@@ -1,0 +1,42 @@
+name: temper
+url: https://github.com/temper-mc/temper
+license: GPL3
+arch: [x86_64, aarch64]
+pkgdesc: "Stupidly fast open-source Minecraft server, written in Rust"
+
+variants:
+  bin:
+    pkgver: "0.1.1"
+    provides: [temper]
+    conflicts: [temper, temper-git]
+    options: ["!strip"]
+    versionChecker: "curl -s https://api.github.com/repos/temper-mc/temper/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
+    source:
+      x86_64:
+        - "temper-bin-${pkgver}-x86_64.tar.gz::${url}/releases/download/v${pkgver}/temper-x86_64-unknown-linux-gnu.tar.gz"
+      aarch64:
+        - "temper-bin-${pkgver}-aarch64.tar.gz::${url}/releases/download/v${pkgver}/temper-aarch64-unknown-linux-gnu.tar.gz"
+    package: |
+      install -Dm755 "${srcdir}/temper" "${pkgdir}/usr/bin/temper"
+
+  git:
+    depends: [gcc-libs, glibc]
+    makedepends: [cargo, git]
+    provides: [temper]
+    conflicts: [temper, temper-bin]
+    options: ["!strip"]
+    source:
+      - "temper::git+${url}.git"
+    pkgver_func: |
+      cd "${srcdir}/temper"
+      git describe --long --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g;s/^v//'
+    prepare: |
+      cd "${srcdir}/temper"
+      cargo fetch
+    build: |
+      cd "${srcdir}/temper"
+      export CARGO_HOME="${srcdir}/cargo"
+      cargo build --release
+    package: |
+      cd "${srcdir}/temper"
+      install -Dm755 "target/release/temper" "${pkgdir}/usr/bin/temper"

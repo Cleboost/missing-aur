@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       package:
-        description: 'Package directory (e.g., kissmp/kissmp-bridge-bin)'
+        description: 'Package dir, e.g. "psst/psst-bin" or "temper/temper-git"'
         required: true
         type: string
 
@@ -18,67 +18,53 @@ jobs:
         run: pacman -Syu --noconfirm git
 
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Install dependencies
-        run: |
-          pacman -S --noconfirm base-devel curl jq openssh sudo pacman-contrib
+        run: pacman -S --noconfirm base-devel curl jq python-yaml openssh sudo pacman-contrib
 
       - name: Setup build user
         run: |
           useradd -m build
           echo "build ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/build
-          # On donne la propriété du workspace à build
           chown -R build:build "$GITHUB_WORKSPACE"
-          # On autorise le dossier pour git en tant que build
           sudo -u build bash -c "git config --global --add safe.directory $GITHUB_WORKSPACE"
 
-      - name: Update Checksums and .SRCINFO
+      - name: Generate PKGBUILD
         run: |
-          dir="${{ inputs.package }}"
-          if [[ ! "$dir" =~ ^packages/ ]]; then
-            dir="packages/$dir"
-          fi
-          if [ ! -d "$dir" ]; then
-            echo "Error: Directory $dir does not exist."
-            exit 1
-          fi
-          
-          sudo -E -u build ./manage.sh generate "$dir" --force
+          input="${{ inputs.package }}"
+          [[ "$input" == packages/* ]] || input="packages/$input"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          sudo -E -u build python3 manage.py generate "$input"
+          echo "PKG_DIR=$input" >> "$GITHUB_ENV"
 
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.AUR_SSH_PRIVATE_KEY }}" > ~/.ssh/id_aur
           chmod 600 ~/.ssh/id_aur
-          echo "Host aur.archlinux.org
-            IdentityFile ~/.ssh/id_aur
-            User aur" > ~/.ssh/config
+          printf "Host aur.archlinux.org\n  IdentityFile ~/.ssh/id_aur\n  User aur\n" > ~/.ssh/config
           ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
 
       - name: Push to AUR
         env:
           GIT_SSH_COMMAND: ssh -i ~/.ssh/id_aur -o StrictHostKeyChecking=accept-new
         run: |
-          dir="${{ inputs.package }}"
-          if [[ ! "$dir" =~ ^packages/ ]]; then
-            dir="packages/$dir"
-          fi
-          pkgname=$(grep -oP '^pkgname=\K.*' "$dir/PKGBUILD")
-          
-          git clone aur@aur.archlinux.org:$pkgname.git aur_repo
-          find aur_repo -maxdepth 1 -not -name ".git" -not -name "aur_repo" -exec rm -rf {} +
-          cp $dir/PKGBUILD aur_repo/
-          cp $dir/.SRCINFO aur_repo/
-          
+          pkgname=$(grep -oP '^pkgname=\K.*' "${PKG_DIR}/PKGBUILD")
+
+          git clone aur@aur.archlinux.org:${pkgname}.git aur_repo
+          find aur_repo -maxdepth 1 ! -name ".git" ! -name "aur_repo" -exec rm -rf {} +
+          cp "${PKG_DIR}/PKGBUILD" aur_repo/
+          cp "${PKG_DIR}/.SRCINFO" aur_repo/
+
           cd aur_repo
           git config user.name "${{ secrets.AUR_USERNAME }}"
           git config user.email "${{ secrets.AUR_EMAIL }}"
           git add PKGBUILD .SRCINFO
-          
+
           pkgver=$(grep -oP '^pkgver=\K.*' PKGBUILD)
           pkgrel=$(grep -oP '^pkgrel=\K.*' PKGBUILD)
-          git commit -m "Manual update to $pkgver-$pkgrel" || echo "No changes to commit"
+          git commit -m "Manual update to ${pkgver}-${pkgrel}" || echo "Nothing to commit"
           git push origin master

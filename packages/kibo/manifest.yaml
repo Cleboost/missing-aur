@@ -1,0 +1,24 @@
+name: kibo
+url: https://kiboanime.app
+license: custom
+pkgdesc: "Kibo Anime - Application for watching anime"
+
+variants:
+  appimage:
+    pkgver: 1.1.7
+    pkgrel: 2
+    depends: [fuse2]
+    options: ["!strip"]
+    versionChecker: "curl -s https://www.kiboanime.app/ | grep -oP 'v\\K[0-9]+\\.[0-9]+\\.[0-9]+' | head -n1"
+    source:
+      - "kibo-appimage-${pkgver}.AppImage::https://apk.kiboanime.app/downloadpc/Kibo-${pkgver}.AppImage"
+      - "kibo.svg::https://www.kiboanime.app/group-2.svg"
+      - kibo.desktop
+    prepare: |
+      chmod +x "${srcdir}/kibo-appimage-${pkgver}.AppImage"
+    package: |
+      install -Dm755 "${srcdir}/kibo-appimage-${pkgver}.AppImage" "${pkgdir}/opt/kibo-appimage/kibo.AppImage"
+      install -dm755 "${pkgdir}/usr/bin"
+      ln -sf "/opt/kibo-appimage/kibo.AppImage" "${pkgdir}/usr/bin/kibo"
+      install -Dm644 "${srcdir}/kibo.svg" "${pkgdir}/usr/share/icons/hicolor/scalable/apps/kibo.svg"
+      install -Dm644 "${srcdir}/kibo.desktop" "${pkgdir}/usr/share/applications/kibo.desktop"

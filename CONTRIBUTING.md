@@ -1,31 +1,193 @@
-# Contributing Guidelines
+# Contributing
 
-Thank you for considering contributing to `missing-aur`! 
+Adding a package means writing one `manifest.yaml`. There are no templates and
+no hidden magic: YAML keys map 1:1 to standard PKGBUILD fields, and the build
+steps are plain bash.
 
-## How to add a new package
+## Structure
 
-To add a new package, please follow these steps:
-
-1. **Create a new directory**: The name should match the base name of the software and package variant under `packages/` (e.g., `packages/my-cool-app/my-cool-app-bin/`).
-2. **Add a `PKGBUILD`**: Follow the standard Arch Linux [PKGBUILD](https://wiki.archlinux.org/title/PKGBUILD) guidelines.
-3. **Add a `version.sh` (optional)**: This script must output the latest version string to `stdout`. It is used by the automation bot to detect updates. Non-binary packages (like `-git`) do not need a `version.sh` file.
-   - Example for GitHub releases: `curl -s https://api.github.com/repos/user/repo/releases/latest | jq -r .tag_name`
-4. **Test your package**: Ensure `makepkg` works locally before submitting.
-
-## Pull Request Rules
-
-- **One package per PR**: Each Pull Request should only add or modify a single package.
-- **Commit style**: Use clear commit messages like `feat: add my-cool-app`.
-- **Validation**: Ensure your `PKGBUILD` and `version.sh` are working correctly. The automation will take care of SHA-256 sums and `.SRCINFO` once merged, but it's better to have them correct from the start.
-
-## Directory Structure
-
-```text
-packages/
-└── my-cool-app/
-    ├── my-cool-app-bin/
-    │   ├── PKGBUILD
-    │   └── version.sh
-    └── my-cool-app-git/
-        └── PKGBUILD
 ```
+packages/
+  <app>/
+    manifest.yaml      ← everything goes here
+    <file>.desktop     ← local assets (optional)
+```
+
+The generated subdirectories `packages/<app>/<pkgname>/` (PKGBUILD, .SRCINFO)
+are **fully generated** — never edit them by hand.
+
+## How it works
+
+A manifest declares an app `name` and one or more `variants`. The variant key
+is appended to the name to form the package name:
+
+```yaml
+name: psst          # the app
+variants:
+  bin:              # → pkgname = psst-bin
+  git:              # → pkgname = psst-git
+```
+
+Fields written at the top level are **shared** by every variant. A variant can
+override any of them. That's the whole model.
+
+## Minimal example (single variant)
+
+```yaml
+name: foo
+url: https://github.com/author/foo
+license: MIT
+
+variants:
+  bin:
+    pkgver: "1.2.3"
+    pkgdesc: "Short description"
+    depends: [gtk3, openssl]
+    versionChecker: "curl -s https://api.github.com/repos/author/foo/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
+    source:
+      - "foo-${pkgver}::${url}/releases/download/v${pkgver}/foo-linux-x86_64"
+    package: |
+      install -Dm755 "foo-${pkgver}" "${pkgdir}/usr/bin/foo"
+```
+
+This produces `packages/foo/foo-bin/PKGBUILD` with pkgname `foo-bin`.
+
+## Multiple variants (shared fields)
+
+```yaml
+name: foo
+url: https://github.com/author/foo
+license: GPL3
+arch: [x86_64, aarch64]          # shared by both variants
+
+variants:
+  bin:
+    pkgver: "1.2.3"
+    pkgdesc: "Foo"
+    provides: [foo]
+    conflicts: [foo, foo-git]
+    versionChecker: "..."
+    source:
+      - "foo-${pkgver}.tar.gz::${url}/releases/download/v${pkgver}/foo-linux.tar.gz"
+    package: |
+      install -Dm755 "${srcdir}/foo" "${pkgdir}/usr/bin/foo"
+
+  git:
+    pkgdesc: "Foo"
+    depends: [gcc-libs, glibc]
+    makedepends: [cargo, git]
+    provides: [foo]
+    conflicts: [foo, foo-bin]
+    source:
+      - "foo::git+${url}.git"
+    pkgver_func: |
+      cd "${srcdir}/foo"
+      git describe --long --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g;s/^v//'
+    build: |
+      cd "${srcdir}/foo"
+      cargo build --release
+    package: |
+      cd "${srcdir}/foo"
+      install -Dm755 "target/release/foo" "${pkgdir}/usr/bin/foo"
+```
+
+Variant fields override shared ones. A `git` variant simply omits
+`versionChecker` (its version is derived by the `pkgver` function instead).
+
+## Fields
+
+Standard PKGBUILD fields, used as-is:
+
+| YAML | PKGBUILD |
+|---|---|
+| `pkgname`, `pkgver`, `pkgrel`, `epoch` | unquoted scalars |
+| `pkgdesc`, `url` | quoted scalars |
+| `arch`, `depends`, `makedepends`, `optdepends`, `provides`, `conflicts`, `replaces`, `options`, `backup`, `groups` | arrays |
+| `license` | array |
+| `source` | array, or a per-arch map (see below) |
+
+Build functions are written as **multiline bash** strings:
+
+| YAML key | PKGBUILD function |
+|---|---|
+| `pkgver_func` | `pkgver()` |
+| `prepare` | `prepare()` |
+| `build` | `build()` |
+| `package` | `package()` |
+
+`${pkgver}`, `${srcdir}`, `${pkgdir}`, `${url}`, etc. are interpolated by
+makepkg at build time — write them literally.
+
+### Per-architecture sources
+
+```yaml
+source:
+  x86_64:
+    - "foo-${pkgver}-x86_64.tar.gz::${url}/.../foo-x86_64.tar.gz"
+  aarch64:
+    - "foo-${pkgver}-aarch64.tar.gz::${url}/.../foo-aarch64.tar.gz"
+```
+
+## Defaults
+
+Optional when you want the default:
+
+| Field | Default |
+|---|---|
+| `pkgrel` | `1` |
+| `arch` | `[x86_64]` |
+| `pkgver` | `0` (for git variants with a `pkgver_func`) |
+| `sha256sums` | `SKIP` (filled in automatically by `updpkgsums`) |
+
+## Automatic description suffix
+
+A parenthetical suffix is appended to `pkgdesc` based on the pkgname ending —
+don't write it yourself:
+
+| pkgname ends with | appended |
+|---|---|
+| `-bin` | `(precompiled binary)` |
+| `-git` | `(git version)` |
+| `-appimage` | `(AppImage)` |
+
+If the description already ends with `)`, nothing is appended.
+
+## Local assets
+
+Files like `.desktop`, `.patch` or `.png` placed in `packages/<app>/` are copied
+into the build dir automatically and can be referenced by filename in `source`:
+
+```yaml
+source:
+  - "foo-${pkgver}.tar.gz::https://..."
+  - foo.desktop        # local file in packages/foo/
+```
+
+## versionChecker
+
+A shell command printing the **latest available version** to stdout. If it
+differs from `pkgver`, the manifest is updated and the PKGBUILD regenerated
+automatically by the update bot.
+
+```yaml
+# GitHub releases
+versionChecker: "curl -s https://api.github.com/repos/author/repo/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
+
+# Web scraping
+versionChecker: "curl -s https://example.com | grep -oP 'v\\K[0-9.]+' | head -1"
+```
+
+## CLI
+
+```bash
+python3 manage.py generate packages/foo     # generate one app
+python3 manage.py generate-all --force      # regenerate everything
+python3 manage.py check-updates             # check + regenerate if newer
+python3 manage.py clean                     # remove all generated files
+```
+
+## Pull request rules
+
+- **One package per PR.**
+- Clear commit messages: `feat: add foo-bin`, `fix: update kissmp versionChecker`.
+- Run `python3 manage.py generate packages/<app>` locally and check the PKGBUILD before submitting.
