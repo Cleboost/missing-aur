@@ -6,7 +6,7 @@ pkgdesc: "A reimplementation of the Minecraft server in Rust"
 
 variants:
   bin:
-    pkgver: 0
+    pkgver: 0.1.0.rc2
     pkgrel: 1
     provides: [ferrumc]
     conflicts: [ferrumc, ferrumc-git]
