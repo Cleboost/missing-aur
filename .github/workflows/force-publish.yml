@@ -24,7 +24,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pacman -S --noconfirm base-devel openssh sudo pacman-contrib
+          pacman -S --noconfirm base-devel curl jq openssh sudo pacman-contrib
 
       - name: Setup build user
         run: |
