@@ -57,7 +57,15 @@ generate_pkgbuild() {
   echo "# Contributor: missing-aur project <https://github.com/Cleboost/missing-aur>" >> PKGBUILD
   echo "" >> PKGBUILD
 
-  for field in pkgname pkgver pkgrel pkgdesc url; do
+  for field in pkgname pkgver pkgrel; do
+    local val
+    val=$(get_json_val "$manifest_path" "$field")
+    if [[ -n "$val" ]]; then
+      echo "$field=$val" >> PKGBUILD
+    fi
+  done
+
+  for field in pkgdesc url; do
     local val
     val=$(get_json_val "$manifest_path" "$field")
     if [[ -n "$val" ]]; then
