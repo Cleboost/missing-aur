@@ -93,10 +93,15 @@ jobs:
           cp "${pkg_dir}/PKGBUILD" aur_repo/
           cp "${pkg_dir}/.SRCINFO" aur_repo/
 
+          # Copy local source files (non-URL entries in .SRCINFO)
+          grep -E '^\s+source = ' "${pkg_dir}/.SRCINFO" | grep -v '://' | sed 's/.*= //' | while read -r src; do
+            [[ "$src" != *"::"* ]] && [ -f "${pkg_dir}/$src" ] && cp "${pkg_dir}/$src" aur_repo/
+          done
+
           cd aur_repo
           git config user.name "${{ secrets.AUR_USERNAME }}"
           git config user.email "${{ secrets.AUR_EMAIL }}"
-          git add PKGBUILD .SRCINFO
+          git add -A
 
           if git diff --staged --quiet; then
             echo "No changes for ${pkgname}"
