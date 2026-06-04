@@ -1,0 +1,42 @@
+name: "Version outdated"
+description: "A package version is behind and the automatic updater hasn't caught it."
+labels: ["outdated"]
+body:
+  - type: input
+    id: package
+    attributes:
+      label: Package name
+      placeholder: "e.g. psst-bin"
+    validations:
+      required: true
+
+  - type: input
+    id: current
+    attributes:
+      label: Current version in AUR
+      placeholder: "e.g. 1.2.3"
+    validations:
+      required: true
+
+  - type: input
+    id: latest
+    attributes:
+      label: Latest upstream version
+      placeholder: "e.g. 1.3.0"
+    validations:
+      required: true
+
+  - type: input
+    id: upstream
+    attributes:
+      label: Upstream release URL
+      placeholder: "https://github.com/author/repo/releases/tag/v1.3.0"
+    validations:
+      required: false
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional notes
+      description: If you think the versionChecker is broken (e.g. upstream changed their tag format), mention it here.
+      required: false
