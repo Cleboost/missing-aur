@@ -3,13 +3,13 @@ url: https://github.com/temper-mc/temper
 license: GPL3
 arch: [x86_64, aarch64]
 pkgdesc: "Stupidly fast open-source Minecraft server, written in Rust"
+provides: [temper]
+options: ["!strip"]
 
 variants:
   bin:
     pkgver: "0.1.1"
-    provides: [temper]
     conflicts: [temper, temper-git]
-    options: ["!strip"]
     versionChecker: "curl -s https://api.github.com/repos/temper-mc/temper/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
     source:
       x86_64:
@@ -22,9 +22,7 @@ variants:
   git:
     depends: [gcc-libs, glibc]
     makedepends: [cargo, git]
-    provides: [temper]
     conflicts: [temper, temper-bin]
-    options: ["!strip"]
     source:
       - "temper::git+${url}.git"
     pkgver_func: |
