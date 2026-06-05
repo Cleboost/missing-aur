@@ -34,6 +34,10 @@ variants:
 Fields written at the top level are **shared** by every variant. A variant can
 override any of them. That's the whole model.
 
+**Avoid duplicating fields across variants.** If a field has the same value in
+every variant, hoist it to the top level. Only keep in the variant what actually
+differs between variants (e.g. `conflicts`, `pkgver`, `source`).
+
 ## Minimal example (single variant)
 
 ```yaml
@@ -62,12 +66,12 @@ name: foo
 url: https://github.com/author/foo
 license: GPL3
 arch: [x86_64, aarch64]          # shared by both variants
+pkgdesc: "Foo"                    # identical in both → hoist it
+provides: [foo]                   # identical in both → hoist it
 
 variants:
   bin:
     pkgver: "1.2.3"
-    pkgdesc: "Foo"
-    provides: [foo]
     conflicts: [foo, foo-git]
     versionChecker: "..."
     source:
@@ -76,10 +80,8 @@ variants:
       install -Dm755 "${srcdir}/foo" "${pkgdir}/usr/bin/foo"
 
   git:
-    pkgdesc: "Foo"
     depends: [gcc-libs, glibc]
     makedepends: [cargo, git]
-    provides: [foo]
     conflicts: [foo, foo-bin]
     source:
       - "foo::git+${url}.git"
