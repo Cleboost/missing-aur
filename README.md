@@ -4,9 +4,11 @@ A curated collection of Arch Linux packages missing from the AUR — automatical
 
 ## Packages
 
+![maintained here](https://img.shields.io/badge/maintained%20here-blue?style=flat-square) ![external AUR package](https://img.shields.io/badge/external%20AUR%20package-purple?style=flat-square)
+
 | App | Packages |
 |---|---|
-| **[beammp-launcher](https://github.com/BeamMP/BeamMP-Launcher)**<br>Multiplayer launcher/client for BeamNG.drive | [![beammp-launcher](https://img.shields.io/aur/version/beammp-launcher?style=flat-square&label=beammp-launcher)](https://aur.archlinux.org/packages/beammp-launcher) |
+| **[beammp-launcher](https://github.com/BeamMP/BeamMP-Launcher)**<br>Multiplayer launcher/client for BeamNG.drive | [![beammp-launcher](https://img.shields.io/aur/version/beammp-launcher?style=flat-square&label=beammp-launcher)](https://aur.archlinux.org/packages/beammp-launcher) [![beammp-launcher-git](https://img.shields.io/aur/version/beammp-launcher-git?style=flat-square&label=beammp-launcher-git&color=purple)](https://aur.archlinux.org/packages/beammp-launcher-git) |
 | **[ferrumc](https://github.com/ferrumc-rs/ferrumc)**<br>A reimplementation of the Minecraft server in Rust | [![ferrumc-bin](https://img.shields.io/aur/version/ferrumc-bin?style=flat-square&label=ferrumc-bin)](https://aur.archlinux.org/packages/ferrumc-bin) |
 | **[kibo](https://kiboanime.app)**<br>Application for watching anime | [![kibo-appimage](https://img.shields.io/aur/version/kibo-appimage?style=flat-square&label=kibo-appimage)](https://aur.archlinux.org/packages/kibo-appimage) |
 | **[kissmp](https://github.com/TheHellBox/KISS-multiplayer)**<br>Multiplayer mod for BeamNG.drive | [![kissmp-bridge-bin](https://img.shields.io/aur/version/kissmp-bridge-bin?style=flat-square&label=kissmp-bridge-bin)](https://aur.archlinux.org/packages/kissmp-bridge-bin) [![kissmp-server-bin](https://img.shields.io/aur/version/kissmp-server-bin?style=flat-square&label=kissmp-server-bin)](https://aur.archlinux.org/packages/kissmp-server-bin) |
