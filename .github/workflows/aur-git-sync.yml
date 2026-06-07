@@ -66,35 +66,10 @@ jobs:
             for pkgbuild in "$app_dir"/*/PKGBUILD; do
               [ -f "$pkgbuild" ] || continue
               pkg_dir=$(dirname "$pkgbuild")
-              pkgname=$(grep -oP '^pkgname=\K.*' "$pkgbuild")
-
-              git clone aur@aur.archlinux.org:${pkgname}.git aur_repo
-              find aur_repo -maxdepth 1 ! -name ".git" ! -name "aur_repo" -exec rm -rf {} +
-              cp "$pkg_dir/PKGBUILD" aur_repo/
-              cp "$pkg_dir/.SRCINFO" aur_repo/
-
-              # Copy local source files (non-URL entries in .SRCINFO)
-              grep -E '^\s+source = ' "$pkg_dir/.SRCINFO" | grep -v '://' | sed 's/.*= //' | while read -r src; do
-                [[ "$src" != *"::"* ]] && [ -f "$pkg_dir/$src" ] && cp "$pkg_dir/$src" aur_repo/
-              done
-
-              cd aur_repo
-              git config user.name "${{ secrets.AUR_USERNAME }}"
-              git config user.email "${{ secrets.AUR_EMAIL }}"
-              git add -A
-
-              if git diff --staged --quiet; then
-                echo "No changes for ${pkgname}"
-              else
-                pkgver=$(grep -oP '^pkgver=\K.*' PKGBUILD)
-                pkgrel=$(grep -oP '^pkgrel=\K.*' PKGBUILD)
-                git commit -m "Update to ${pkgver}-${pkgrel}"
-                git push origin master
-                echo "Synced ${pkgname} to AUR"
-              fi
-
-              cd ..
-              rm -rf aur_repo
+              bash .github/scripts/push-to-aur.sh \
+                "$pkg_dir" \
+                "${{ secrets.AUR_USERNAME }}" \
+                "${{ secrets.AUR_EMAIL }}"
             done
             echo "::endgroup::"
           done

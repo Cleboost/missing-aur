@@ -32,14 +32,6 @@ jobs:
           chown -R build:build "$GITHUB_WORKSPACE"
           sudo -u build bash -c "git config --global --add safe.directory $GITHUB_WORKSPACE"
 
-      - name: Generate PKGBUILD
-        run: |
-          input="${{ inputs.package }}"
-          [[ "$input" == packages/* ]] || input="packages/$input"
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          sudo -E -u build python3 manage.py generate "$input"
-          echo "PKG_DIR=$input" >> "$GITHUB_ENV"
-
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
@@ -48,28 +40,21 @@ jobs:
           printf "Host aur.archlinux.org\n  IdentityFile ~/.ssh/id_aur\n  User aur\n" > ~/.ssh/config
           ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
 
-      - name: Push to AUR
+      - name: Generate PKGBUILD and push to AUR
         env:
           GIT_SSH_COMMAND: ssh -i ~/.ssh/id_aur -o StrictHostKeyChecking=accept-new
         run: |
-          pkgname=$(grep -oP '^pkgname=\K.*' "${PKG_DIR}/PKGBUILD")
+          input="${{ inputs.package }}"
+          [[ "$input" == packages/* ]] || input="packages/$input"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          sudo -E -u build python3 manage.py generate "$input"
 
-          git clone aur@aur.archlinux.org:${pkgname}.git aur_repo
-          find aur_repo -maxdepth 1 ! -name ".git" ! -name "aur_repo" -exec rm -rf {} +
-          cp "${PKG_DIR}/PKGBUILD" aur_repo/
-          cp "${PKG_DIR}/.SRCINFO" aur_repo/
-
-          # Copy local source files (non-URL entries in .SRCINFO)
-          grep -E '^\s+source = ' "${PKG_DIR}/.SRCINFO" | grep -v '://' | sed 's/.*= //' | while read -r src; do
-            [[ "$src" != *"::"* ]] && [ -f "${PKG_DIR}/$src" ] && cp "${PKG_DIR}/$src" aur_repo/
+          for pkgbuild in "$input"/*/PKGBUILD; do
+            [ -f "$pkgbuild" ] || continue
+            pkg_dir=$(dirname "$pkgbuild")
+            bash .github/scripts/push-to-aur.sh \
+              "$pkg_dir" \
+              "${{ secrets.AUR_USERNAME }}" \
+              "${{ secrets.AUR_EMAIL }}" \
+              "Manual update to $(grep -oP '^pkgver=\K.*' "$pkgbuild")-$(grep -oP '^pkgrel=\K.*' "$pkgbuild")"
           done
-
-          cd aur_repo
-          git config user.name "${{ secrets.AUR_USERNAME }}"
-          git config user.email "${{ secrets.AUR_EMAIL }}"
-          git add -A
-
-          pkgver=$(grep -oP '^pkgver=\K.*' PKGBUILD)
-          pkgrel=$(grep -oP '^pkgrel=\K.*' PKGBUILD)
-          git commit -m "Manual update to ${pkgver}-${pkgrel}" || echo "Nothing to commit"
-          git push origin master

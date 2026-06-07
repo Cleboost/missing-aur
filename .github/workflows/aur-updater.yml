@@ -58,34 +58,10 @@ jobs:
           for p in packages:
               print(p['pkgname'] + '|' + p['dir'])
           " | while IFS='|' read -r pkgname pkg_dir; do
-            echo "::group::Pushing $pkgname to AUR"
-
-            git clone aur@aur.archlinux.org:${pkgname}.git aur_repo
-            find aur_repo -maxdepth 1 ! -name ".git" ! -name "aur_repo" -exec rm -rf {} +
-            cp "${pkg_dir}/PKGBUILD" aur_repo/
-            cp "${pkg_dir}/.SRCINFO" aur_repo/
-
-            grep -E '^\s+source = ' "${pkg_dir}/.SRCINFO" | grep -v '://' | sed 's/.*= //' | while read -r src; do
-              [[ "$src" != *"::"* ]] && [ -f "${pkg_dir}/$src" ] && cp "${pkg_dir}/$src" aur_repo/
-            done
-
-            cd aur_repo
-            git config user.name "${{ secrets.AUR_USERNAME }}"
-            git config user.email "${{ secrets.AUR_EMAIL }}"
-            git add -A
-
-            if git diff --staged --quiet; then
-              echo "No changes for ${pkgname}"
-            else
-              pkgver=$(grep -oP '^pkgver=\K.*' PKGBUILD)
-              git commit -m "Update to ${pkgver}"
-              git push origin master
-              echo "Pushed ${pkgname} to AUR"
-            fi
-
-            cd ..
-            rm -rf aur_repo
-            echo "::endgroup::"
+            bash .github/scripts/push-to-aur.sh \
+              "$pkg_dir" \
+              "${{ secrets.AUR_USERNAME }}" \
+              "${{ secrets.AUR_EMAIL }}"
           done
 
       - name: Commit manifest changes to GitHub
