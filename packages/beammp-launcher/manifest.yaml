@@ -1,0 +1,26 @@
+name: beammp-launcher
+url: https://github.com/BeamMP/BeamMP-Launcher
+license: LGPL3
+arch: [x86_64]
+pkgdesc: "Multiplayer Launcher/Client for BeamMP, providing multiplayer for BeamNG.drive"
+variants:
+  base:
+    pkgver: "2.8.0"
+    depends: [curl, openssl, zlib]
+    makedepends: [cmake, vcpkg, ninja]
+    versionChecker: "curl -s https://api.github.com/repos/BeamMP/BeamMP-Launcher/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
+    source:
+      - "beammp-launcher-${pkgver}.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz"
+    prepare: |
+      cd "${srcdir}/BeamMP-Launcher-${pkgver}"
+      VCPKG_ROOT=/opt/vcpkg /opt/vcpkg/vcpkg install --triplet x64-linux
+    build: |
+      cd "${srcdir}/BeamMP-Launcher-${pkgver}"
+      cmake . -B bin \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake \
+        -DVCPKG_TARGET_TRIPLET=x64-linux \
+        -GNinja
+      cmake --build bin --parallel
+    package: |
+      install -Dm755 "${srcdir}/BeamMP-Launcher-${pkgver}/bin/BeamMP-Launcher" "${pkgdir}/usr/bin/beammp-launcher"
