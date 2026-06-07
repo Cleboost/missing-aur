@@ -233,3 +233,6 @@ python3 manage.py clean                     # remove all generated files
 - Clear commit messages: `feat: add foo-bin`, `fix: update kissmp versionChecker`.
 - Run `python3 manage.py generate packages/<app>` locally and check the PKGBUILD before submitting.
 - **Don't forget to add the new app to the table in `README.md`** (one row per app, badges for each variant).
+  - Badges for packages maintained here use the default blue color.
+  - If other AUR packages exist for the same app (e.g. a `-git` you don't maintain), add their badges too using `&color=purple` — so users know they exist but aren't managed by this repo.
+  - Forgetting external badges is no big deal — they're purely informational and can be added later.
