@@ -31,6 +31,24 @@ variants:
   git:              # → pkgname = psst-git
 ```
 
+Some variant keys are **reserved** and produce no suffix — the pkgname equals
+`name` exactly. Use them when the package follows the AUR convention of having
+no suffix (i.e. it is the canonical, non-binary, non-git package):
+
+| Key | Intended use |
+|---|---|
+| `base` | Compiled from a release tarball (default choice) |
+| `stable` | Alias for the same intent |
+| `release` | Alias for the same intent |
+
+```yaml
+name: foo
+variants:
+  base:    # → pkgname = foo  (no suffix)
+  bin:     # → pkgname = foo-bin
+  git:     # → pkgname = foo-git
+```
+
 Fields written at the top level are **shared** by every variant. A variant can
 override any of them. That's the whole model.
 
@@ -155,7 +173,8 @@ don't write it yourself:
 | `-git` | `(git version)` |
 | `-appimage` | `(AppImage)` |
 
-If the description already ends with `)`, nothing is appended.
+If the description already ends with `)`, nothing is appended. Base variants
+(`base`, `stable`, `release`) never receive a suffix.
 
 ## Local assets
 

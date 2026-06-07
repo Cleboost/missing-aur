@@ -6,6 +6,9 @@ key is appended to the name to form the pkgname (psst + bin -> psst-bin).
 Fields declared at the top level are shared by all variants; a variant can
 override any of them. There is no template magic: YAML keys map 1:1 to PKGBUILD
 fields, and the build functions are written as plain bash.
+
+Variant keys listed in BASE_VARIANT_KEYS are treated as the "base" package:
+no suffix is appended, so `name: foo` + variant `base` → pkgname `foo`.
 """
 
 import sys
@@ -26,6 +29,9 @@ except ImportError:
 MAINTAINER  = "Cleboost <clement.balarot@gmail.com>"
 CONTRIBUTOR = "missing-aur project <https://github.com/Cleboost/missing-aur>"
 PACKAGES_DIR = Path("packages")
+
+# Variant keys that represent the canonical/base package — no suffix appended.
+BASE_VARIANT_KEYS = {"base", "stable", "release"}
 
 # Suffix automatically appended to pkgdesc based on the pkgname ending.
 DESC_SUFFIX = {
@@ -51,7 +57,7 @@ def load_packages(manifest_path: Path) -> list[tuple[str | None, dict]]:
     packages = []
     for key, variant in variants.items():
         pkg = {**shared, **(variant or {})}
-        pkg.setdefault("pkgname", f"{name}-{key}" if name else None)
+        pkg.setdefault("pkgname", name if key in BASE_VARIANT_KEYS else (f"{name}-{key}" if name else None))
         if not pkg.get("pkgname"):
             raise ValueError(f"{manifest_path}: variant {key!r} has no pkgname (set `name:` or `pkgname:`)")
         packages.append((key, pkg))
