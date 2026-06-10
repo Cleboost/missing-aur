@@ -1,0 +1,15 @@
+name: crunchyroll-downloader
+url: https://github.com/CuteTenshii/crunchyroll-downloader
+license: MIT
+pkgdesc: "Downloads anime from Crunchyroll and outputs them in a MKV file"
+
+variants:
+  bin:
+    pkgver: "1.1.1"
+    provides: [crunchyroll-downloader]
+    conflicts: [crunchyroll-downloader]
+    versionChecker: "curl -s https://api.github.com/repos/CuteTenshii/crunchyroll-downloader/releases/latest | jq -r '.tag_name'"
+    source:
+      - "crdl-${pkgver}::${url}/releases/download/${pkgver}/crdl-linux"
+    package: |
+      install -Dm755 "crdl-${pkgver}" "${pkgdir}/usr/bin/crdl"
