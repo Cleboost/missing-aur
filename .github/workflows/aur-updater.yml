@@ -38,9 +38,8 @@ jobs:
           ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
 
       - name: Check for updates and publish
-        env:
-          GIT_SSH_COMMAND: ssh -i ~/.ssh/id_aur -o StrictHostKeyChecking=accept-new
         run: |
+          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/id_aur -o StrictHostKeyChecking=accept-new"
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           sudo -E -u build python3 manage.py check-updates --ci 2>&1 | tee /tmp/check_output.log
           packages=$(grep '^packages=' /tmp/check_output.log | sed 's/^packages=//' || echo '[]')
