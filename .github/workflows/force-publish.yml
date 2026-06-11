@@ -41,9 +41,8 @@ jobs:
           ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
 
       - name: Generate PKGBUILD and push to AUR
-        env:
-          GIT_SSH_COMMAND: ssh -i ~/.ssh/id_aur -o StrictHostKeyChecking=accept-new
         run: |
+          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/id_aur -o StrictHostKeyChecking=accept-new"
           input="${{ inputs.package }}"
           [[ "$input" == packages/* ]] || input="packages/$input"
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
