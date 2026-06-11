@@ -26,7 +26,7 @@ find aur_repo -maxdepth 1 ! -name ".git" ! -name "aur_repo" -exec rm -rf {} +
 cp "$pkg_dir/PKGBUILD" aur_repo/
 cp "$pkg_dir/.SRCINFO" aur_repo/
 
-grep -E '^\s+source = ' "$pkg_dir/.SRCINFO" | grep -v '://' | sed 's/.*= //' | while read -r src; do
+{ grep -E '^\s+source = ' "$pkg_dir/.SRCINFO" || true; } | grep -v '://' | sed 's/.*= //' | while read -r src; do
   [[ "$src" != *"::"* ]] && [ -f "$pkg_dir/$src" ] && cp "$pkg_dir/$src" aur_repo/
 done
 
