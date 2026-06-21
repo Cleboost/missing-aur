@@ -4,6 +4,7 @@
 #
 # Expects GIT_SSH_COMMAND to be set in the environment (SSH key already configured).
 set -euo pipefail
+set -x
 
 pkg_dir="$1"
 aur_username="$2"
@@ -39,7 +40,7 @@ if git diff --staged --quiet; then
   echo "No changes for ${pkgname}"
 else
   git commit -m "$commit_msg"
-  git push origin master
+  git push origin HEAD:master
   echo "Pushed ${pkgname} to AUR"
 fi
 
