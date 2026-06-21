@@ -29,7 +29,7 @@ cp "$pkg_dir/.SRCINFO" aur_repo/
 
 { grep -E '^\s+source = ' "$pkg_dir/.SRCINFO" || true; } | grep -v '://' | sed 's/.*= //' | while read -r src; do
   [[ "$src" != *"::"* ]] && [ -f "$pkg_dir/$src" ] && cp "$pkg_dir/$src" aur_repo/
-done
+done || true
 
 cd aur_repo
 git config user.name "$aur_username"
