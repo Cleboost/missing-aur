@@ -1,0 +1,21 @@
+name: layerbase
+url: https://layerbase.com
+license: LicenseRef-PolyForm-Noncommercial-1.0.0
+pkgdesc: "A beautiful GUI for managing all your local databases. Create, query, backup, and monitor PostgreSQL, MySQL, MongoDB, Redis, and more. No terminal required."
+arch: [x86_64]
+
+variants:
+  bin:
+    pkgver: "0.29.11"
+    depends: [libx11, libxcomposite, libxdamage, libxext, libxfixes, libxrandr, mesa, nss, alsa-lib, at-spi2-core, cups, dbus, expat, libdrm, libxkbcommon, libxss]
+    makedepends: [libarchive]
+    options: ["!strip"]
+    versionChecker: "curl -Ls https://layerbase.com/download | grep -oP 'Version\\s*<span class=\"font-mono\">\\K[0-9]+\\.[0-9]+\\.[0-9]+'"
+    source:
+      x86_64:
+        - "layerbase-${pkgver}-amd64.deb::https://layerbase.com/api/download/linux?format=deb"
+    package: |
+      bsdtar -xOf "${srcdir}/layerbase-${pkgver}-amd64.deb" data.tar.xz | bsdtar -xf - -C "${pkgdir}"
+      chmod 4755 "${pkgdir}/opt/Layerbase/chrome-sandbox"
+      install -dm755 "${pkgdir}/usr/bin"
+      ln -sf "/opt/Layerbase/layerbase-desktop" "${pkgdir}/usr/bin/layerbase"
