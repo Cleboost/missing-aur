@@ -160,6 +160,13 @@ Optional when you want the default:
 | `pkgrel` | `1` |
 | `arch` | `[x86_64]` |
 | `pkgver` | `0` (for git variants with a `pkgver_func`) |
+
+> **New packages — force the first AUR push:** when submitting a brand-new
+> package, set `pkgver: "0"` even for `-bin` variants. The CI compares the
+> manifest version against the AUR and only pushes when they differ. Since the
+> AUR package doesn't exist yet, starting at `0` guarantees the bot picks it up,
+> bumps to the real version, and performs the initial push. If you set the real
+> version right away, the bot sees no difference and never creates the AUR package.
 | `sha256sums` | `SKIP` (filled in automatically by `updpkgsums`) |
 
 ## Automatic description suffix
