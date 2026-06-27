@@ -81,7 +81,7 @@ jobs:
             app_dir=$(dirname "$pkg_dir")
             git add "${app_dir}/manifest.yaml"
             if ! git diff --staged --quiet; then
-              old_ver=$(git diff --staged -- "${app_dir}/manifest.yaml" | grep '^-pkgver' | grep -oP ':\s*\K\S+' || echo "?")
+              old_ver=$(git diff --staged -- "${app_dir}/manifest.yaml" | grep '^-[[:space:]]*pkgver' | grep -oP ':\s*"?\K[^"[:space:]]+' || echo "?")
               git commit -m "chore(${pkgname}): bump ${old_ver} → ${pkgver}"
             fi
           done
