@@ -6,7 +6,7 @@ arch: [x86_64]
 
 variants:
   bin:
-    pkgver: 1.10.1
+    pkgver: 0.0.0
     depends: [gtk3, libappindicator-gtk3, webkit2gtk-4.1]
     optdepends: ["wl-clipboard: Wayland clipboard support", "gtk-layer-shell: Wayland overlay support"]
     makedepends: [libarchive]
