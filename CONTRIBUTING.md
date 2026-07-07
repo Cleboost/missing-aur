@@ -56,6 +56,28 @@ override any of them. That's the whole model.
 every variant, hoist it to the top level. Only keep in the variant what actually
 differs between variants (e.g. `conflicts`, `pkgver`, `source`).
 
+## New packages — set `pkgver` to `0`
+
+When adding a package that does **not** exist on the AUR yet, set `pkgver: "0"`
+in the manifest for **every new variant** (`-bin`, `-appimage`, `base`, etc.) —
+**except `-git`**. Git variants derive their version from a `pkgver()` function
+and do not use this trick.
+
+The nightly GitHub Action runs each variant's `versionChecker`, compares the
+result to `pkgver`, and only pushes to the AUR when they differ. A brand-new
+package has no AUR entry yet, so if you write the real upstream version
+straight away the bot sees nothing to update and **never creates the AUR
+package**.
+
+Starting at `0` guarantees the bot detects a newer version, bumps the manifest,
+regenerates the PKGBUILD, and performs the initial push. You do not need to
+track the latest version yourself — the `versionChecker` and CI handle that
+after merge.
+
+If you already committed the real version by mistake, push a follow-up commit
+that sets `pkgver` back to `"0"` (see `fix(murmure-bin): set pkgver to 0 to
+trigger initial AUR push`).
+
 ## Minimal example (single variant)
 
 ```yaml
@@ -65,7 +87,7 @@ license: MIT
 
 variants:
   bin:
-    pkgver: "1.2.3"
+    pkgver: "0"                     # new -bin package → 0; CI bumps to latest
     pkgdesc: "Short description"
     depends: [gtk3, openssl]
     versionChecker: "curl -s https://api.github.com/repos/author/foo/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
@@ -159,14 +181,7 @@ Optional when you want the default:
 |---|---|
 | `pkgrel` | `1` |
 | `arch` | `[x86_64]` |
-| `pkgver` | `0` (for git variants with a `pkgver_func`) |
-
-> **New packages — force the first AUR push:** when submitting a brand-new
-> package, set `pkgver: "0"` even for `-bin` variants. The CI compares the
-> manifest version against the AUR and only pushes when they differ. Since the
-> AUR package doesn't exist yet, starting at `0` guarantees the bot picks it up,
-> bumps to the real version, and performs the initial push. If you set the real
-> version right away, the bot sees no difference and never creates the AUR package.
+| `pkgver` | `0` (default for git variants with a `pkgver_func`; required for all other new packages — see [New packages](#new-packages--set-pkgver-to-0)) |
 | `sha256sums` | `SKIP` (filled in automatically by `updpkgsums`) |
 
 ## Automatic description suffix
@@ -237,6 +252,9 @@ python3 manage.py clean                     # remove all generated files
 ## Pull request rules
 
 - **One package per PR.**
+- **New AUR packages: set `pkgver: "0"`** on every variant except `-git`, so
+  the GitHub Action performs the initial push (see
+  [New packages](#new-packages--set-pkgver-to-0)).
 - Clear commit messages: `feat: add foo-bin`, `fix: update kissmp versionChecker`.
 - Run `python3 manage.py generate packages/<app>` locally and check the PKGBUILD before submitting.
 - **Don't forget to add the new app to the table in `README.md`** (one row per app, badges for each variant).
