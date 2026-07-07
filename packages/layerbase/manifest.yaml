@@ -6,7 +6,7 @@ arch: [x86_64]
 
 variants:
   bin:
-    pkgver: 0.35.3
+    pkgver: 0.36.0
     depends: [libx11, libxcomposite, libxdamage, libxext, libxfixes, libxrandr, mesa, nss, alsa-lib, at-spi2-core, cups, dbus, expat, libdrm, libxkbcommon, libxss]
     makedepends: [libarchive]
     options: ["!strip"]
