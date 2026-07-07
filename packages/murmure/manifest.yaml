@@ -1,0 +1,21 @@
+name: murmure
+url: https://github.com/Kieirra/murmure
+license: AGPL3
+pkgdesc: "Privacy-first speech-to-text, running entirely on your machine"
+arch: [x86_64]
+
+variants:
+  bin:
+    pkgver: 1.10.1
+    depends: [gtk3, libappindicator-gtk3, webkit2gtk-4.1]
+    optdepends: ["wl-clipboard: Wayland clipboard support", "gtk-layer-shell: Wayland overlay support"]
+    makedepends: [libarchive]
+    provides: [murmure]
+    conflicts: [murmure]
+    options: ["!strip"]
+    versionChecker: "curl -s https://api.github.com/repos/Kieirra/murmure/releases/latest | jq -r '.tag_name'"
+    source:
+      x86_64:
+        - "murmure-${pkgver}-amd64.deb::${url}/releases/download/${pkgver}/Murmure_amd64.deb"
+    package: |
+      bsdtar -xOf "${srcdir}/murmure-${pkgver}-amd64.deb" data.tar.gz | bsdtar -xf - -C "${pkgdir}"
