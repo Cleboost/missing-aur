@@ -38,6 +38,8 @@ jobs:
           ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
 
       - name: Check for updates and publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/id_aur -o StrictHostKeyChecking=accept-new"
           git config --global --add safe.directory "$GITHUB_WORKSPACE"

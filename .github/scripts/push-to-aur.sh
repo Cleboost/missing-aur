@@ -18,6 +18,11 @@ pkgname=$(grep -oP '^pkgname=\K.*' "$pkgbuild")
 pkgver=$(grep -oP '^pkgver=\K.*' "$pkgbuild")
 pkgrel=$(grep -oP '^pkgrel=\K.*' "$pkgbuild")
 
+if [[ "$pkgver" == "null" || ! "$pkgver" =~ ^[A-Za-z0-9][A-Za-z0-9._+-]*$ ]]; then
+  echo "Refusing to push invalid pkgver: ${pkgver}"
+  exit 1
+fi
+
 [ -n "$commit_msg" ] || commit_msg="Update to ${pkgver}-${pkgrel}"
 
 echo "::group::Pushing $pkgname to AUR"
