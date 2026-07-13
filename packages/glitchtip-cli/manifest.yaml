@@ -8,7 +8,7 @@ versionChecker: "curl -s https://gitlab.com/api/v4/projects/glitchtip%2Fglitchti
 
 variants:
   base:
-    pkgver: "0"
+    pkgver: 1.0.0
     depends: [gcc-libs, glibc]
     makedepends: [cargo]
     conflicts: [glitchtip-cli-bin]
@@ -26,7 +26,7 @@ variants:
       install -Dm755 "target/release/glitchtip-cli" "${pkgdir}/usr/bin/glitchtip-cli"
 
   bin:
-    pkgver: "0"
+    pkgver: 1.0.0
     conflicts: [glitchtip-cli]
     options: ["!strip"]
     source:
