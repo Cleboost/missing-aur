@@ -50,8 +50,21 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           sudo -E -u build python3 manage.py generate "$input"
 
-          for pkgbuild in "$input"/*/PKGBUILD; do
-            [ -f "$pkgbuild" ] || continue
+          pkgbuilds=()
+          if [ -f "$input/PKGBUILD" ]; then
+            pkgbuilds+=("$input/PKGBUILD")
+          else
+            for pkgbuild in "$input"/*/PKGBUILD; do
+              [ -f "$pkgbuild" ] && pkgbuilds+=("$pkgbuild")
+            done
+          fi
+
+          if [ "${#pkgbuilds[@]}" -eq 0 ]; then
+            echo "No PKGBUILD found under $input"
+            exit 1
+          fi
+
+          for pkgbuild in "${pkgbuilds[@]}"; do
             pkg_dir=$(dirname "$pkgbuild")
             bash .github/scripts/push-to-aur.sh \
               "$pkg_dir" \
