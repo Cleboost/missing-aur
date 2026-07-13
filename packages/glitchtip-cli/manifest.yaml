@@ -1,0 +1,38 @@
+name: glitchtip-cli
+url: https://gitlab.com/glitchtip/glitchtip-cli
+license: MIT
+arch: [x86_64, aarch64]
+pkgdesc: "Open source CLI for GlitchTip"
+provides: [glitchtip-cli]
+versionChecker: "curl -s https://gitlab.com/api/v4/projects/glitchtip%2Fglitchtip-cli/releases | jq -r '.[0].tag_name' | sed 's/^v//'"
+
+variants:
+  base:
+    pkgver: "0"
+    depends: [gcc-libs, glibc]
+    makedepends: [cargo]
+    conflicts: [glitchtip-cli-bin]
+    source:
+      - "glitchtip-cli-${pkgver}.tar.gz::${url}/-/archive/v${pkgver}/glitchtip-cli-v${pkgver}.tar.gz"
+    prepare: |
+      cd "${srcdir}/glitchtip-cli-${pkgver}"
+      cargo fetch
+    build: |
+      cd "${srcdir}/glitchtip-cli-${pkgver}"
+      export CARGO_HOME="${srcdir}/cargo"
+      cargo build --release
+    package: |
+      cd "${srcdir}/glitchtip-cli-${pkgver}"
+      install -Dm755 "target/release/glitchtip-cli" "${pkgdir}/usr/bin/glitchtip-cli"
+
+  bin:
+    pkgver: "0"
+    conflicts: [glitchtip-cli]
+    options: ["!strip"]
+    source:
+      x86_64:
+        - "glitchtip-cli-${pkgver}-x86_64::${url}/-/jobs/artifacts/v${pkgver}/raw/artifacts/glitchtip-cli-linux-x86_64?job=build-linux-x86_64"
+      aarch64:
+        - "glitchtip-cli-${pkgver}-aarch64::${url}/-/jobs/artifacts/v${pkgver}/raw/artifacts/glitchtip-cli-linux-arm64?job=build-linux-arm64"
+    package: |
+      install -Dm755 "glitchtip-cli-${pkgver}-${CARCH}" "${pkgdir}/usr/bin/glitchtip-cli"
