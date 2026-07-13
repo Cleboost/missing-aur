@@ -5,8 +5,8 @@ arch: [x86_64]
 pkgdesc: "Multiplayer Launcher/Client for BeamMP, providing multiplayer for BeamNG.drive"
 variants:
   base:
-    pkgver: null
-    pkgrel: 1
+    pkgver: "2.8.0"
+    pkgrel: 2
     depends: [curl, openssl, zlib]
     makedepends: [cmake, vcpkg, ninja]
     versionChecker: "curl -s https://api.github.com/repos/BeamMP/BeamMP-Launcher/releases/latest | jq -r '.tag_name' | sed 's/^v//'"

@@ -41,6 +41,8 @@ jobs:
           ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
 
       - name: Generate PKGBUILD and push to AUR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/id_aur -o StrictHostKeyChecking=accept-new"
           input="${{ inputs.package }}"

@@ -162,13 +162,45 @@ def generate_pkgbuild(pkg: dict, output_dir: Path) -> None:
 
 # ── Version checking & update ─────────────────────────────────────────────────
 
+_INVALID_VERSIONS = frozenset({"null", "none", "n/a", "undefined", "error"})
+
+
+class UpdateFailed(Exception):
+    pass
+
+
+def _is_valid_pkgver(ver: str) -> bool:
+    if not ver or ver.lower() in _INVALID_VERSIONS:
+        return False
+    return bool(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._+-]*", ver))
+
+
+def _prepare_version_checker(checker: str) -> str:
+    if "api.github.com" not in checker:
+        return checker
+    token = os.environ.get("GITHUB_TOKEN", "")
+    auth = f'-H "Authorization: Bearer {token}" ' if token else ""
+    for prefix in ("curl -sf ", "curl -s "):
+        if checker.startswith(prefix):
+            return f"curl -sf {auth}{checker[len(prefix):]}"
+    return checker
+
+
 def check_version(pkg: dict, cwd: Path) -> str | None:
     checker = pkg.get("versionChecker")
     if not checker:
         return None
+    checker = _prepare_version_checker(checker)
     result = subprocess.run(checker, shell=True, capture_output=True, text=True, cwd=cwd)
+    pkgname = pkg.get("pkgname", "?")
+    if result.returncode != 0:
+        print(f"  Warning: versionChecker failed for {pkgname} (exit {result.returncode})", file=sys.stderr)
+        return None
     ver = result.stdout.strip()
-    return ver if ver and ver != str(pkg.get("pkgver", "")) else None
+    if not _is_valid_pkgver(ver):
+        print(f"  Warning: invalid version {ver!r} for {pkgname}", file=sys.stderr)
+        return None
+    return ver if ver != str(pkg.get("pkgver", "")) else None
 
 
 def update_manifest_version(manifest_path: Path, variant_key: str | None, new_ver: str) -> None:
@@ -222,7 +254,6 @@ def process_package(manifest_path: Path, variant_key: str | None, pkg: dict, for
     if new_ver:
         print(f"  {pkgname}: {pkg.get('pkgver')} → {new_ver}")
         pkg = {**pkg, "pkgver": new_ver, "pkgrel": 1}
-        update_manifest_version(manifest_path, variant_key, new_ver)
     elif not changed:
         print(f"  {pkgname}: up to date ({pkg.get('pkgver', 'N/A')})")
         return None
@@ -236,15 +267,20 @@ def process_package(manifest_path: Path, variant_key: str | None, pkg: dict, for
             shutil.copy2(asset, out_dir / asset.name)
 
     if shutil.which("updpkgsums"):
-        subprocess.run(["updpkgsums"], cwd=out_dir, check=False)
+        if subprocess.run(["updpkgsums"], cwd=out_dir, check=False).returncode != 0:
+            raise UpdateFailed(f"updpkgsums failed for {pkgname}")
     else:
         print("  Warning: updpkgsums not found, skipping checksum update.")
 
     if shutil.which("makepkg"):
         with open(out_dir / ".SRCINFO", "w") as f:
-            subprocess.run(["makepkg", "--printsrcinfo"], cwd=out_dir, stdout=f, check=False)
+            if subprocess.run(["makepkg", "--printsrcinfo"], cwd=out_dir, stdout=f, check=False).returncode != 0:
+                raise UpdateFailed(f"makepkg --printsrcinfo failed for {pkgname}")
     else:
         print("  Warning: makepkg not found, skipping .SRCINFO generation.")
+
+    if new_ver:
+        update_manifest_version(manifest_path, variant_key, new_ver)
 
     return {"dir": str(out_dir), "pkgname": pkgname, "pkgver": str(pkg.get("pkgver", ""))}
 
@@ -279,8 +315,13 @@ def cmd_check_updates(args):
     updated = []
     for manifest in find_manifests():
         for key, pkg in load_packages(manifest):
-            if result := process_package(manifest, key, pkg, force=False, version_only=True):
-                updated.append(result)
+            try:
+                if result := process_package(manifest, key, pkg, force=False, version_only=True):
+                    updated.append(result)
+            except UpdateFailed as exc:
+                print(f"  {exc}", file=sys.stderr)
+                if args.ci:
+                    sys.exit(1)
 
     if args.ci:
         print(f"packages={json.dumps(updated)}")
@@ -318,7 +359,11 @@ def main():
     p.set_defaults(func=cmd_clean)
 
     args = ap.parse_args()
-    args.func(args)
+    try:
+        args.func(args)
+    except UpdateFailed as exc:
+        print(str(exc), file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
