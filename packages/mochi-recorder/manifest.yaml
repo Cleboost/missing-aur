@@ -1,0 +1,31 @@
+name: mochi-recorder
+url: https://github.com/4ndreello/mochi-recorder
+license: MIT
+pkgdesc: "A modern Linux screen recorder with smooth animations like Screen Studio"
+
+variants:
+  appimage:
+    pkgver: "0"
+    depends: [fuse2]
+    options: ["!strip"]
+    versionChecker: "curl -s https://api.github.com/repos/4ndreello/mochi-recorder/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
+    source:
+      - "mochi-recorder-appimage-${pkgver}.AppImage::${url}/releases/download/v${pkgver}/Mochi-${pkgver}.AppImage"
+      - "mochi-recorder.png::https://raw.githubusercontent.com/4ndreello/mochi-recorder/main/src/renderer/assets/icon.png"
+    prepare: |
+      chmod +x "${srcdir}/mochi-recorder-appimage-${pkgver}.AppImage"
+    package: |
+      install -Dm755 "${srcdir}/mochi-recorder-appimage-${pkgver}.AppImage" "${pkgdir}/opt/mochi-recorder-appimage/mochi.AppImage"
+      install -dm755 "${pkgdir}/usr/bin"
+      ln -sf "/opt/mochi-recorder-appimage/mochi.AppImage" "${pkgdir}/usr/bin/mochi"
+      install -Dm644 "${srcdir}/mochi-recorder.png" "${pkgdir}/usr/share/icons/hicolor/512x512/apps/mochi-recorder.png"
+      install -Dm644 /dev/stdin "${pkgdir}/usr/share/applications/mochi-recorder.desktop" << 'EOF'
+      [Desktop Entry]
+      Name=Mochi
+      Comment=A modern Linux screen recorder with smooth animations like Screen Studio
+      Exec=mochi
+      Icon=mochi-recorder
+      Terminal=false
+      Type=Application
+      Categories=AudioVideo;Recorder;Utility;
+      EOF
