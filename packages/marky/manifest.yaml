@@ -1,0 +1,37 @@
+name: marky
+url: https://github.com/GRVYDEV/marky
+license: Apache-2.0
+arch: [x86_64, aarch64]
+pkgdesc: "Fast native markdown viewer with live reload and folder workspaces"
+
+variants:
+  appimage:
+    pkgver: "0"
+    depends: [fuse2]
+    options: ["!strip"]
+    versionChecker: "curl -s https://api.github.com/repos/GRVYDEV/marky/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
+    source:
+      x86_64:
+        - "marky-appimage-${pkgver}-x86_64.AppImage::${url}/releases/download/v${pkgver}/Marky_${pkgver}_amd64.AppImage"
+        - "marky.png::https://raw.githubusercontent.com/GRVYDEV/marky/main/src-tauri/icons/128x128@2x.png"
+        - "marky.desktop::https://raw.githubusercontent.com/Cleboost/missing-aur/main/packages/marky/marky.desktop"
+      aarch64:
+        - "marky-appimage-${pkgver}-aarch64.AppImage::${url}/releases/download/v${pkgver}/Marky_${pkgver}_arm64.AppImage"
+        - "marky.png::https://raw.githubusercontent.com/GRVYDEV/marky/main/src-tauri/icons/128x128@2x.png"
+        - "marky.desktop::https://raw.githubusercontent.com/Cleboost/missing-aur/main/packages/marky/marky.desktop"
+    prepare: |
+      if [ "${CARCH}" = "x86_64" ]; then
+        chmod +x "${srcdir}/marky-appimage-${pkgver}-x86_64.AppImage"
+      elif [ "${CARCH}" = "aarch64" ]; then
+        chmod +x "${srcdir}/marky-appimage-${pkgver}-aarch64.AppImage"
+      fi
+    package: |
+      if [ "${CARCH}" = "x86_64" ]; then
+        install -Dm755 "${srcdir}/marky-appimage-${pkgver}-x86_64.AppImage" "${pkgdir}/opt/marky-appimage/marky.AppImage"
+      elif [ "${CARCH}" = "aarch64" ]; then
+        install -Dm755 "${srcdir}/marky-appimage-${pkgver}-aarch64.AppImage" "${pkgdir}/opt/marky-appimage/marky.AppImage"
+      fi
+      install -dm755 "${pkgdir}/usr/bin"
+      ln -sf "/opt/marky-appimage/marky.AppImage" "${pkgdir}/usr/bin/marky"
+      install -Dm644 "${srcdir}/marky.png" "${pkgdir}/usr/share/icons/hicolor/256x256/apps/marky.png"
+      install -Dm644 "${srcdir}/marky.desktop" "${pkgdir}/usr/share/applications/marky.desktop"

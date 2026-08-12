@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Marky
+Comment=A fast markdown viewer with vault support
+Exec=marky
+Icon=marky
+Terminal=false
+Type=Application
+Categories=Office;Utility;
+StartupWMClass=marky
