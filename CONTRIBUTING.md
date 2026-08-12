@@ -4,6 +4,18 @@ Adding a package means writing one `manifest.yaml`. There are no templates and
 no hidden magic: YAML keys map 1:1 to standard PKGBUILD fields, and the build
 steps are plain bash.
 
+## AI assistants
+
+If you are an AI agent working from this guide:
+
+- **This repo (`missing-aur`)** — proceed on your own: manifest, local assets,
+  `README.md` table, `manage.py generate`, commits, and PRs here. No need to ask
+  permission for each step unless the user said otherwise.
+- **Upstream README PR** — **never** fork the upstream project, edit their
+  README, or open a PR there unless the user **explicitly** asks you to. After
+  adding a package here, you may briefly mention that an upstream install-doc PR
+  is possible — then stop and wait for a clear yes/no.
+
 ## Structure
 
 ```
@@ -276,3 +288,119 @@ python3 manage.py clean                     # remove all generated files
   - Badges for packages maintained here use the default blue color.
   - If other AUR packages exist for the same app (e.g. a `-git` you don't maintain), add their badges too using `&color=purple` — so users know they exist but aren't managed by this repo.
   - Forgetting external badges is no big deal — they're purely informational and can be added later.
+
+## Upstream README PR
+
+Optional follow-up **after** a package is live on the AUR: a small documentation
+PR on the upstream project so Arch users can find it. **Human contributors:**
+your call. **AI agents:** only do this when the user explicitly asks — see
+[AI assistants](#ai-assistants).
+
+Keep the change minimal: one new subsection under the existing Linux /
+Installation docs. No code changes, no test plan in the PR body.
+
+Real example: [cdevroe/signboard#48](https://github.com/cdevroe/signboard/pull/48).
+
+### Workflow
+
+1. Fork the upstream repo (if you do not already have one).
+2. Create a branch: `docs/arch-linux-aur-install`
+3. Add the README subsection below under Installation (or the Linux install
+   section — match wherever upstream documents downloads).
+4. Commit: `docs: document Arch Linux AUR installation`
+5. Open a PR against upstream `main` (or their default branch).
+
+```bash
+git checkout -b docs/arch-linux-aur-install
+# edit README
+git add README.md   # or readme.md — use whatever the upstream repo uses
+git commit -m "docs: document Arch Linux AUR installation"
+git push -u origin docs/arch-linux-aur-install
+gh pr create --repo <upstream-owner>/<upstream-repo> \
+  --head Cleboost:docs/arch-linux-aur-install \
+  --base main \
+  --title "docs: document Arch Linux AUR installation" \
+  --body-file /path/to/pr-body.md
+```
+
+### README subsection (copy-paste template)
+
+Replace the placeholders, then paste under the upstream install section:
+
+| Placeholder | Example |
+|---|---|
+| `<AppName>` | `Signboard` |
+| `<pkgname>` | `signboard-appimage` |
+| `<arch>` | `x86_64` and `aarch64` (or just `x86_64`) |
+
+```markdown
+### Arch Linux (AUR)
+
+On Arch Linux and Arch-based distributions, <AppName> is available on the [Arch User Repository](https://aur.archlinux.org/packages/<pkgname>) as `<pkgname>` for <arch>. The package is maintained in the community [`missing-aur`](https://github.com/Cleboost/missing-aur) project and kept up to date with upstream releases.
+
+Install with your preferred AUR helper:
+
+\`\`\`bash
+yay -S <pkgname>
+# or
+paru -S <pkgname>
+\`\`\`
+```
+
+**Signboard example** (filled in):
+
+```markdown
+### Arch Linux (AUR)
+
+On Arch Linux and Arch-based distributions, Signboard is available on the [Arch User Repository](https://aur.archlinux.org/packages/signboard-appimage) as `signboard-appimage` for `x86_64` and `aarch64`. The package is maintained in the community [`missing-aur`](https://github.com/Cleboost/missing-aur) project and kept up to date with upstream releases.
+
+Install with your preferred AUR helper:
+
+\`\`\`bash
+yay -S signboard-appimage
+# or
+paru -S signboard-appimage
+\`\`\`
+```
+
+### PR title
+
+```
+docs: document Arch Linux AUR installation
+```
+
+### PR body (copy-paste template)
+
+Replace `<pkgname>` and `<arch>`:
+
+```markdown
+## Summary
+
+- Adds an **Arch Linux (AUR)** subsection under Installation in the README
+- Documents the community-maintained [`<pkgname>`](https://aur.archlinux.org/packages/<pkgname>) package for <arch>
+- Includes example install commands for common AUR helpers (`yay`, `paru`)
+
+The package is maintained in [missing-aur](https://github.com/Cleboost/missing-aur) and updated automatically from upstream releases.
+```
+
+**Signboard example** (filled in):
+
+```markdown
+## Summary
+
+- Adds an **Arch Linux (AUR)** subsection under Installation in `readme.md`
+- Documents the community-maintained [`signboard-appimage`](https://aur.archlinux.org/packages/signboard-appimage) package for `x86_64` and `aarch64`
+- Includes example install commands for common AUR helpers (`yay`, `paru`)
+
+The package is maintained in [missing-aur](https://github.com/Cleboost/missing-aur) and updated automatically from upstream GitHub releases.
+```
+
+### Notes
+
+- Match the upstream README filename and heading style (`README.md` vs `readme.md`,
+  `## Installation` vs `### Linux`).
+- Only document variants actually published on the AUR from this repo.
+- If upstream already lists distro packages (Homebrew, Flathub, etc.), place the
+  AUR block alongside them — do not replace their existing install flow.
+- If the maintainer declines or ignores the PR, the AUR package still works;
+  this is optional outreach, not a blocker.
