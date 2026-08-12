@@ -1,0 +1,24 @@
+name: otterly
+url: https://github.com/ajkdrag/otterly
+license: MIT
+arch: [x86_64]
+pkgdesc: "Local-first, privacy-focused WYSIWYG Markdown vault with full-text search, wiki-links, and a rich editor"
+
+variants:
+  appimage:
+    pkgver: "0"
+    depends: [fuse2]
+    options: ["!strip"]
+    versionChecker: "curl -s https://api.github.com/repos/ajkdrag/otterly/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
+    source:
+      - "otterly-appimage-${pkgver}.AppImage::${url}/releases/download/v${pkgver}/otterly_${pkgver}_amd64.AppImage"
+      - "otterly.png::https://raw.githubusercontent.com/ajkdrag/otterly/main/src-tauri/icons/128x128@2x.png"
+      - "otterly.desktop::https://raw.githubusercontent.com/Cleboost/missing-aur/main/packages/otterly/otterly.desktop"
+    prepare: |
+      chmod +x "${srcdir}/otterly-appimage-${pkgver}.AppImage"
+    package: |
+      install -Dm755 "${srcdir}/otterly-appimage-${pkgver}.AppImage" "${pkgdir}/opt/otterly-appimage/otterly.AppImage"
+      install -dm755 "${pkgdir}/usr/bin"
+      ln -sf "/opt/otterly-appimage/otterly.AppImage" "${pkgdir}/usr/bin/otterly"
+      install -Dm644 "${srcdir}/otterly.png" "${pkgdir}/usr/share/icons/hicolor/256x256/apps/otterly.png"
+      install -Dm644 "${srcdir}/otterly.desktop" "${pkgdir}/usr/share/applications/otterly.desktop"
