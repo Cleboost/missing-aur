@@ -6,7 +6,7 @@ pkgdesc: "Desktop GUI for MarkItDown with queue-based multi-file conversion to M
 
 variants:
   appimage:
-    pkgver: "0"
+    pkgver: 1.3.2
     depends: [fuse2]
     options: ["!strip"]
     versionChecker: "curl -s https://api.github.com/repos/imadreamerboy/markitdown-gui/releases/latest | jq -r '.tag_name' | sed 's/^v\\.//'"
