@@ -6,7 +6,7 @@ pkgdesc: "A local-first kanban app that writes Markdown files"
 
 variants:
   appimage:
-    pkgver: "0"
+    pkgver: 1.6.0
     depends: [fuse2]
     options: ["!strip"]
     versionChecker: "curl -s https://api.github.com/repos/cdevroe/signboard/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
