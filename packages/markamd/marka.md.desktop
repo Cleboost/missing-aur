@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=marka.md
+Comment=Local-first markdown editor with live preview, reading mode, diagrams, themes, and context bundles
+Exec=marka.md
+Icon=marka.md
+Terminal=false
+Type=Application
+Categories=Office;TextEditor;Utility;
+StartupWMClass=marka.md
