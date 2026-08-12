@@ -1,0 +1,24 @@
+name: markitdown-gui
+url: https://github.com/imadreamerboy/markitdown-gui
+license: MIT
+arch: [x86_64]
+pkgdesc: "Desktop GUI for MarkItDown with queue-based multi-file conversion to Markdown"
+
+variants:
+  appimage:
+    pkgver: "0"
+    depends: [fuse2]
+    options: ["!strip"]
+    versionChecker: "curl -s https://api.github.com/repos/imadreamerboy/markitdown-gui/releases/latest | jq -r '.tag_name' | sed 's/^v\\.//'"
+    source:
+      - "markitdown-gui-appimage-${pkgver}.AppImage::${url}/releases/download/v.${pkgver}/MarkItDown-Linux-${pkgver}.AppImage"
+      - "markitdown-gui.png::https://raw.githubusercontent.com/imadreamerboy/markitdown-gui/main/markitdowngui/resources/markitdown-gui.png"
+      - "markitdown-gui.desktop::https://raw.githubusercontent.com/Cleboost/missing-aur/main/packages/markitdown-gui/markitdown-gui.desktop"
+    prepare: |
+      chmod +x "${srcdir}/markitdown-gui-appimage-${pkgver}.AppImage"
+    package: |
+      install -Dm755 "${srcdir}/markitdown-gui-appimage-${pkgver}.AppImage" "${pkgdir}/opt/markitdown-gui-appimage/markitdown-gui.AppImage"
+      install -dm755 "${pkgdir}/usr/bin"
+      ln -sf "/opt/markitdown-gui-appimage/markitdown-gui.AppImage" "${pkgdir}/usr/bin/markitdown-gui"
+      install -Dm644 "${srcdir}/markitdown-gui.png" "${pkgdir}/usr/share/icons/hicolor/256x256/apps/markitdown-gui.png"
+      install -Dm644 "${srcdir}/markitdown-gui.desktop" "${pkgdir}/usr/share/applications/markitdown-gui.desktop"
