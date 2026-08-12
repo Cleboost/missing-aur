@@ -6,14 +6,14 @@ pkgdesc: "A modern Linux screen recorder with smooth animations like Screen Stud
 variants:
   appimage:
     pkgver: 1.0.22
-    pkgrel: 2
+    pkgrel: 3
     depends: [fuse2]
     options: ["!strip"]
     versionChecker: "curl -s https://api.github.com/repos/4ndreello/mochi-recorder/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
     source:
       - "mochi-recorder-appimage-${pkgver}.AppImage::${url}/releases/download/v${pkgver}/Mochi-${pkgver}.AppImage"
       - "mochi-recorder.png::https://raw.githubusercontent.com/4ndreello/mochi-recorder/main/src/renderer/assets/icon.png"
-      - mochi-recorder.desktop
+      - "mochi-recorder.desktop::https://raw.githubusercontent.com/Cleboost/missing-aur/main/packages/mochi-recorder/mochi-recorder.desktop"
     prepare: |
       chmod +x "${srcdir}/mochi-recorder-appimage-${pkgver}.AppImage"
     package: |
