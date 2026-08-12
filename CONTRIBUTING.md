@@ -200,31 +200,46 @@ If the description already ends with `)`, nothing is appended. Base variants
 
 ## Local assets
 
-Files like `.patch` or `.png` placed in `packages/<app>/` are copied into the
-build dir automatically and pushed to the AUR repo alongside the PKGBUILD. They
-can be referenced by filename in `source`:
+Files committed in `packages/<app>/` (`.desktop`, `.patch`, icons, etc.) are
+copied into the generated build dir by `manage.py`. Reference them in `source`
+with a **download URL** — `makepkg` on the AUR must be able to fetch every
+source file.
+
+```yaml
+source:
+  - "foo-${pkgver}.tar.gz::https://upstream.example/foo-${pkgver}.tar.gz"
+  - "foo.desktop::https://raw.githubusercontent.com/Cleboost/missing-aur/main/packages/foo/foo.desktop"
+```
+
+`push-to-aur.sh` can also copy bare filenames (no URL) into the AUR git repo,
+but this repo does not rely on that — always use a raw URL, either from
+missing-aur (for files you maintain here) or from upstream (see
+`packages/psst/manifest.yaml`).
+
+### Desktop entries (`.desktop`)
+
+**Do not use a heredoc in `package()`.** `manage.py` indents every line inside
+build functions, including heredoc content — the installed `.desktop` file ends
+up with leading spaces on each line and launchers ignore it.
+
+Instead, commit a `packages/<app>/<app>.desktop` file and reference it in
+`source` with a **raw GitHub URL** so AUR users can download it with
+`makepkg`:
 
 ```yaml
 source:
   - "foo-${pkgver}.tar.gz::https://..."
-  - foo.patch          # local file in packages/foo/
-```
-
-For simple text files like `.desktop` entries, prefer inlining the content
-directly in `package()` via a heredoc — no extra file needed anywhere:
-
-```yaml
+  - "foo.desktop::https://raw.githubusercontent.com/Cleboost/missing-aur/main/packages/foo/foo.desktop"
 package: |
-  # ... other install commands ...
-  install -Dm644 /dev/stdin "${pkgdir}/usr/share/applications/foo.desktop" << 'EOF'
-  [Desktop Entry]
-  Name=Foo
-  Exec=foo
-  Icon=foo
-  Type=Application
-  Categories=Utility;
-  EOF
+  install -Dm644 "${srcdir}/foo.desktop" "${pkgdir}/usr/share/applications/foo.desktop"
 ```
+
+If upstream already ships a `.desktop` file, point to its raw URL instead (see
+`packages/psst/manifest.yaml`).
+
+Packaging-only fixes (desktop entry, install path, etc.) with no upstream version
+change require a manual `pkgrel` bump in the manifest. The nightly bot only
+resets `pkgrel` to `1` when `pkgver` changes.
 
 ## versionChecker
 
