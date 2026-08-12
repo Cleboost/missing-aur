@@ -1,0 +1,24 @@
+name: markamd
+url: https://github.com/mattenarle10/markamd
+license: MIT
+arch: [x86_64]
+pkgdesc: "Local-first markdown editor with live preview, reading mode, diagrams, themes, and context bundles"
+
+variants:
+  appimage:
+    pkgver: "0"
+    depends: [fuse2]
+    options: ["!strip"]
+    versionChecker: "curl -s https://api.github.com/repos/mattenarle10/markamd/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
+    source:
+      - "markamd-appimage-${pkgver}.AppImage::${url}/releases/download/v${pkgver}/marka.md_${pkgver}_amd64.AppImage"
+      - "marka.md.png::https://raw.githubusercontent.com/mattenarle10/markamd/main/src-tauri/icons/128x128@2x.png"
+      - "marka.md.desktop::https://raw.githubusercontent.com/Cleboost/missing-aur/main/packages/markamd/marka.md.desktop"
+    prepare: |
+      chmod +x "${srcdir}/markamd-appimage-${pkgver}.AppImage"
+    package: |
+      install -Dm755 "${srcdir}/markamd-appimage-${pkgver}.AppImage" "${pkgdir}/opt/markamd-appimage/marka.md.AppImage"
+      install -dm755 "${pkgdir}/usr/bin"
+      ln -sf "/opt/markamd-appimage/marka.md.AppImage" "${pkgdir}/usr/bin/marka.md"
+      install -Dm644 "${srcdir}/marka.md.png" "${pkgdir}/usr/share/icons/hicolor/256x256/apps/marka.md.png"
+      install -Dm644 "${srcdir}/marka.md.desktop" "${pkgdir}/usr/share/applications/marka.md.desktop"
