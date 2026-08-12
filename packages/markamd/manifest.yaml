@@ -6,7 +6,7 @@ pkgdesc: "Local-first markdown editor with live preview, reading mode, diagrams,
 
 variants:
   appimage:
-    pkgver: "0"
+    pkgver: 1.7.1
     depends: [fuse2]
     options: ["!strip"]
     versionChecker: "curl -s https://api.github.com/repos/mattenarle10/markamd/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
