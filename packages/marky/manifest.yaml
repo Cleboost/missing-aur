@@ -6,7 +6,7 @@ pkgdesc: "Fast native markdown viewer with live reload and folder workspaces"
 
 variants:
   appimage:
-    pkgver: "0"
+    pkgver: 0.1.3
     depends: [fuse2]
     options: ["!strip"]
     versionChecker: "curl -s https://api.github.com/repos/GRVYDEV/marky/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
