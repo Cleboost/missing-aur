@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=otterly
+Comment=Local-first markdown vault
+Exec=otterly
+Icon=otterly
+Terminal=false
+Type=Application
+Categories=Office;TextEditor;Utility;
+StartupWMClass=otterly
