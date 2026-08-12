@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=MarkItDown
+Comment=Desktop GUI for MarkItDown with queue-based multi-file conversion to Markdown
+Exec=markitdown-gui
+Icon=markitdown-gui
+Terminal=false
+Type=Application
+Categories=Office;Utility;
