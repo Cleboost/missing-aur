@@ -93,20 +93,40 @@ def collect_issues(apps: list[str], base_ref: str) -> list[Issue]:
     return issues
 
 
+def write_report(path: str, report: str) -> None:
+    Path(path).write_text(report)
+    print(report)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Run PR checks and write report")
     ap.add_argument("--base", default="origin/main")
     ap.add_argument("--output", default="pr-report.md")
+    ap.add_argument(
+        "--apps",
+        nargs="*",
+        default=None,
+        help="Package app names to check (skips git diff detection)",
+    )
     ap.add_argument("--icon-commit", default="", help="Commit SHA for icon auto-fix")
     ap.add_argument("--manifest-fixes", default="", help="JSON report from lint_manifest.py fix")
     ap.add_argument("--readme-commit", default="", help="Commit SHA for README auto-fix")
     args = ap.parse_args()
 
-    apps = changed_apps(args.base)
+    try:
+        apps = args.apps if args.apps is not None else changed_apps(args.base)
+    except RuntimeError as exc:
+        report = (
+            "## Package check recap\n\n"
+            f"Could not detect changed packages: {exc}\n\n"
+            "See the workflow logs for details."
+        )
+        write_report(args.output, report)
+        sys.exit(1)
+
     if not apps:
         report = "## Package check recap\n\nNo changes under `packages/` — skipped package checks."
-        Path(args.output).write_text(report)
-        print(report)
+        write_report(args.output, report)
         return
 
     auto_fixes = describe_auto_fixes(
@@ -119,8 +139,7 @@ def main() -> None:
     suggestions = [issue for issue in issues if not is_blocking(issue)]
 
     report = format_pr_report(apps, auto_fixes, blocking, suggestions)
-    Path(args.output).write_text(report)
-    print(report)
+    write_report(args.output, report)
 
     if blocking:
         sys.exit(1)
