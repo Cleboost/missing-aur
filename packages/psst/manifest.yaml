@@ -1,4 +1,7 @@
 name: psst
+docs:
+  externalAur:
+    - psst-git
 url: https://github.com/jpochyla/psst
 license: MIT
 pkgdesc: "Fast and multi-platform Spotify client with native GUI"

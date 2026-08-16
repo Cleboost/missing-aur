@@ -1,4 +1,6 @@
 name: layerbase
+docs:
+  description: "A beautiful GUI for managing all your local databases"
 url: https://layerbase.com
 license: LicenseRef-PolyForm-Noncommercial-1.0.0
 pkgdesc: "A beautiful GUI for managing all your local databases. Create, query, backup, and monitor PostgreSQL, MySQL, MongoDB, Redis, and more. No terminal required."

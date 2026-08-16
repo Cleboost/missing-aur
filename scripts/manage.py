@@ -28,7 +28,8 @@ except ImportError:
 
 MAINTAINER  = "Cleboost <clement.balarot@gmail.com>"
 CONTRIBUTOR = "missing-aur project <https://github.com/Cleboost/missing-aur>"
-PACKAGES_DIR = Path("packages")
+REPO_ROOT   = Path(__file__).resolve().parent.parent
+PACKAGES_DIR = REPO_ROOT / "packages"
 
 # Variant keys that represent the canonical/base package — no suffix appended.
 BASE_VARIANT_KEYS = {"base", "stable", "release"}
@@ -46,6 +47,7 @@ DESC_SUFFIX = {
 def load_packages(manifest_path: Path) -> list[tuple[str | None, dict]]:
     """Return (variant_key, resolved_pkg_dict) for each package in the manifest."""
     data     = yaml.safe_load(manifest_path.read_text())
+    data.pop("docs", None)
     name     = data.pop("name", None)
     variants = data.pop("variants", None)
     shared   = data
@@ -289,6 +291,8 @@ def process_package(manifest_path: Path, variant_key: str | None, pkg: dict, for
 
 def cmd_generate(args):
     path = Path(args.path)
+    if not path.is_absolute():
+        path = REPO_ROOT / path
     manifest = path / "manifest.yaml"
     filter_pkg = None
     if not manifest.exists():               # a variant dir was passed

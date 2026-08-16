@@ -1,4 +1,5 @@
 name: mochi-recorder
+docs:
 url: https://github.com/4ndreello/mochi-recorder
 license: MIT
 pkgdesc: "A modern Linux screen recorder with smooth animations like Screen Studio"

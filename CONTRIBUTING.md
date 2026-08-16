@@ -9,7 +9,7 @@ steps are plain bash.
 If you are an AI agent working from this guide:
 
 - **This repo (`missing-aur`)** — proceed on your own: manifest, local assets,
-  `README.md` table, `manage.py generate`, commits, and PRs here. No need to ask
+  `README.md` table via `scripts/generate-readme.py`, `scripts/manage.py generate`, commits, and PRs here. No need to ask
   permission for each step unless the user said otherwise.
 - **Upstream README PR** — **never** fork the upstream project, edit their
   README, or open a PR there unless the user **explicitly** asks you to. After
@@ -27,7 +27,7 @@ packages/
 
 The generated subdirectories `packages/<app>/<pkgname>/` (PKGBUILD, .SRCINFO)
 are **fully generated** — never edit them by hand, and **never commit them**.
-They are produced by `manage.py` on demand locally and by the CI on the server.
+They are produced by `scripts/manage.py` on demand locally and by the CI on the server.
 Committing them would cause conflicts and drift from what the generator produces.
 The `.gitignore` is already configured to ignore them.
 
@@ -63,6 +63,20 @@ variants:
 
 Fields written at the top level are **shared** by every variant. A variant can
 override any of them. That's the whole model.
+
+The optional `docs` block is **metadata for this repository only** — it is
+ignored by PKGBUILD generation and used to build the README table:
+
+```yaml
+docs:
+  description: "One-line summary shown in README.md"  # optional, defaults to pkgdesc
+  icon: foo              # optional, defaults to name (docs/icons/foo.png)
+  externalAur:           # AUR packages we do not maintain (purple badges)
+    - foo-git
+```
+
+After editing a manifest, run `python3 scripts/generate-readme.py fix` to
+refresh the README table.
 
 **Avoid duplicating fields across variants.** If a field has the same value in
 every variant, hoist it to the top level. Only keep in the variant what actually
@@ -213,7 +227,7 @@ If the description already ends with `)`, nothing is appended. Base variants
 ## Local assets
 
 Files committed in `packages/<app>/` (`.desktop`, `.patch`, icons, etc.) are
-copied into the generated build dir by `manage.py`. Reference them in `source`
+copied into the generated build dir by `scripts/manage.py`. Reference them in `source`
 with a **download URL** — `makepkg` on the AUR must be able to fetch every
 source file.
 
@@ -230,7 +244,7 @@ missing-aur (for files you maintain here) or from upstream (see
 
 ### Desktop entries (`.desktop`)
 
-**Do not use a heredoc in `package()`.** `manage.py` indents every line inside
+**Do not use a heredoc in `package()`.** `scripts/manage.py` indents every line inside
 build functions, including heredoc content — the installed `.desktop` file ends
 up with leading spaces on each line and launchers ignore it.
 
@@ -270,10 +284,12 @@ versionChecker: "curl -s https://example.com | grep -oP 'v\\K[0-9.]+' | head -1"
 ## CLI
 
 ```bash
-python3 manage.py generate packages/foo     # generate one app
-python3 manage.py generate-all --force      # regenerate everything
-python3 manage.py check-updates             # check + regenerate if newer
-python3 manage.py clean                     # remove all generated files
+python3 scripts/manage.py generate packages/foo     # generate one app
+python3 scripts/manage.py generate-all --force      # regenerate everything
+python3 scripts/manage.py check-updates             # check + regenerate if newer
+python3 scripts/manage.py clean                     # remove all generated files
+python3 scripts/generate-readme.py check            # CI: README table matches manifests
+python3 scripts/generate-readme.py fix              # regenerate README package table
 ```
 
 ## Pull request rules
@@ -283,11 +299,10 @@ python3 manage.py clean                     # remove all generated files
   the GitHub Action performs the initial push (see
   [New packages](#new-packages--set-pkgver-to-0)).
 - Clear commit messages: `feat: add foo-bin`, `fix: update kissmp versionChecker`.
-- Run `python3 manage.py generate packages/<app>` locally and check the PKGBUILD before submitting.
-- **Don't forget to add the new app to the table in `README.md`** (one row per app, badges for each variant).
-  - Badges for packages maintained here use the default blue color.
-  - If other AUR packages exist for the same app (e.g. a `-git` you don't maintain), add their badges too using `&color=purple` — so users know they exist but aren't managed by this repo.
-  - Forgetting external badges is no big deal — they're purely informational and can be added later.
+- Run `python3 scripts/manage.py generate packages/<app>` locally and check the PKGBUILD before submitting.
+- Add a `docs` block to the manifest and run `python3 scripts/generate-readme.py fix` to update the README table.
+  - `docs.description` is optional — omit it to reuse `pkgdesc` in the README table.
+  - `docs.externalAur` lists related AUR packages maintained elsewhere (purple badges).
 
 ## Upstream README PR
 

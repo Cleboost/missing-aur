@@ -1,4 +1,5 @@
 name: glitchtip-cli
+docs:
 url: https://gitlab.com/glitchtip/glitchtip-cli
 license: MIT
 arch: [x86_64, aarch64]

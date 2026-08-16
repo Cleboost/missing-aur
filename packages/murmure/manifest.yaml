@@ -1,4 +1,8 @@
 name: murmure
+docs:
+  description: "Fully local, private speech-to-text with LLM post-processing"
+  externalAur:
+    - murmure
 url: https://github.com/Kieirra/murmure
 license: AGPL3
 pkgdesc: "Privacy-first speech-to-text, running entirely on your machine"

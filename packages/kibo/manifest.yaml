@@ -1,4 +1,6 @@
 name: kibo
+docs:
+  description: "Application for watching anime"
 url: https://kiboanime.app
 license: custom
 pkgdesc: "Kibo Anime - Application for watching anime"
