@@ -48,7 +48,7 @@ jobs:
           input="${{ inputs.package }}"
           [[ "$input" == packages/* ]] || input="packages/$input"
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          sudo -E -u build python3 manage.py generate "$input"
+          sudo -E -u build python3 scripts/manage.py generate "$input"
 
           pkgbuilds=()
           if [ -f "$input/PKGBUILD" ]; then
