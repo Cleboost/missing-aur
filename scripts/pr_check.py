@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -51,7 +52,7 @@ def commit_files(commit_sha: str) -> list[str]:
 
 def describe_auto_fixes(
     icon_commit: str,
-    manifest_commit: str,
+    manifest_fixes: list[str],
     readme_commit: str,
 ) -> list[str]:
     fixes: list[str] = []
@@ -61,15 +62,7 @@ def describe_auto_fixes(
         paths = ", ".join(f"`{path}`" for path in icon_files)
         fixes.append(f"Resized package icons to {ICON_SIZE}×{ICON_SIZE}: {paths}")
 
-    manifest_files = commit_files(manifest_commit)
-    if manifest_files:
-        paths = ", ".join(f"`{path}`" for path in manifest_files)
-        fixes.append(
-            "Optimized manifests "
-            "(hoisted shared variant fields, removed empty `docs`, redundant `docs.description`, "
-            "sorted `externalAur`): "
-            f"{paths}"
-        )
+    fixes.extend(manifest_fixes)
 
     readme_files = commit_files(readme_commit)
     if readme_files:
@@ -79,10 +72,22 @@ def describe_auto_fixes(
     return fixes
 
 
-def collect_issues(apps: list[str]) -> list[Issue]:
+def load_manifest_fixes(path: str) -> list[str]:
+    if not path:
+        return []
+    report = Path(path)
+    if not report.is_file():
+        return []
+    data = json.loads(report.read_text())
+    if not isinstance(data, list):
+        return []
+    return [str(item) for item in data]
+
+
+def collect_issues(apps: list[str], base_ref: str) -> list[Issue]:
     issues: list[Issue] = []
     for path in manifest_paths(apps):
-        issues.extend(check_manifest(path))
+        issues.extend(check_manifest(path, base_ref=base_ref))
         issues.extend(check_icon(path.parent))
     issues.extend(run_generate_readme_check())
     return issues
@@ -93,7 +98,7 @@ def main() -> None:
     ap.add_argument("--base", default="origin/main")
     ap.add_argument("--output", default="pr-report.md")
     ap.add_argument("--icon-commit", default="", help="Commit SHA for icon auto-fix")
-    ap.add_argument("--manifest-commit", default="", help="Commit SHA for manifest auto-fix")
+    ap.add_argument("--manifest-fixes", default="", help="JSON report from lint_manifest.py fix")
     ap.add_argument("--readme-commit", default="", help="Commit SHA for README auto-fix")
     args = ap.parse_args()
 
@@ -106,10 +111,10 @@ def main() -> None:
 
     auto_fixes = describe_auto_fixes(
         args.icon_commit,
-        args.manifest_commit,
+        load_manifest_fixes(args.manifest_fixes),
         args.readme_commit,
     )
-    issues = collect_issues(apps)
+    issues = collect_issues(apps, args.base)
     blocking = [issue for issue in issues if is_blocking(issue)]
     suggestions = [issue for issue in issues if not is_blocking(issue)]
 
