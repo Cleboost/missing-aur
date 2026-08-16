@@ -40,7 +40,7 @@ jobs:
         id: icon_commit
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
-          commit_message: "fix: resize package icons to 32x32"
+          commit_message: "fix: resize package icons to 48x48"
           file_pattern: packages/**/icon.png
 
       - name: Optimize manifests
