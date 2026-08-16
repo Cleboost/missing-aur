@@ -1,0 +1,37 @@
+name: codepilot
+url: https://github.com/op7418/CodePilot
+license: LicenseRef-BSL-1.1
+arch: [x86_64, aarch64]
+pkgdesc: "A multi-model AI agent desktop client"
+
+variants:
+  appimage:
+    pkgver: "0"
+    depends: [fuse2]
+    options: ["!strip"]
+    versionChecker: "curl -s https://api.github.com/repos/op7418/CodePilot/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
+    source:
+      x86_64:
+        - "codepilot-appimage-${pkgver}-x86_64.AppImage::${url}/releases/download/v${pkgver}/CodePilot-${pkgver}-x86_64.AppImage"
+        - "codepilot.png::https://raw.githubusercontent.com/op7418/CodePilot/main/build/icon.png"
+        - "codepilot.desktop::https://raw.githubusercontent.com/Cleboost/missing-aur/main/packages/codepilot/codepilot.desktop"
+      aarch64:
+        - "codepilot-appimage-${pkgver}-aarch64.AppImage::${url}/releases/download/v${pkgver}/CodePilot-${pkgver}-arm64.AppImage"
+        - "codepilot.png::https://raw.githubusercontent.com/op7418/CodePilot/main/build/icon.png"
+        - "codepilot.desktop::https://raw.githubusercontent.com/Cleboost/missing-aur/main/packages/codepilot/codepilot.desktop"
+    prepare: |
+      if [ "${CARCH}" = "x86_64" ]; then
+        chmod +x "${srcdir}/codepilot-appimage-${pkgver}-x86_64.AppImage"
+      elif [ "${CARCH}" = "aarch64" ]; then
+        chmod +x "${srcdir}/codepilot-appimage-${pkgver}-aarch64.AppImage"
+      fi
+    package: |
+      if [ "${CARCH}" = "x86_64" ]; then
+        install -Dm755 "${srcdir}/codepilot-appimage-${pkgver}-x86_64.AppImage" "${pkgdir}/opt/codepilot-appimage/codepilot.AppImage"
+      elif [ "${CARCH}" = "aarch64" ]; then
+        install -Dm755 "${srcdir}/codepilot-appimage-${pkgver}-aarch64.AppImage" "${pkgdir}/opt/codepilot-appimage/codepilot.AppImage"
+      fi
+      install -dm755 "${pkgdir}/usr/bin"
+      ln -sf "/opt/codepilot-appimage/codepilot.AppImage" "${pkgdir}/usr/bin/codepilot"
+      install -Dm644 "${srcdir}/codepilot.png" "${pkgdir}/usr/share/icons/hicolor/512x512/apps/codepilot.png"
+      install -Dm644 "${srcdir}/codepilot.desktop" "${pkgdir}/usr/share/applications/codepilot.desktop"
