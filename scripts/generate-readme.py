@@ -6,28 +6,26 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
 try:
     import yaml
 except ImportError:
     print("PyYAML required: pacman -S python-yaml", file=sys.stderr)
     sys.exit(1)
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-PACKAGES_DIR = REPO_ROOT / "packages"
-README = REPO_ROOT / "README.md"
-ICON_FILENAME = "icon.png"
+from lib.paths import (
+    BASE_VARIANT_KEYS,
+    ICON_FILENAME,
+    PACKAGES_DIR,
+    README,
+    REPO_ROOT,
+    pkgname,
+)
 
 TABLE_START = "| | App | Packages |"
 TABLE_SEP = "|:---:|:---|:---|"
 TABLE_END_MARKER = "## How it works"
-
-BASE_VARIANT_KEYS = {"base", "stable", "release"}
-
-
-def pkgname(name: str, variant_key: str) -> str:
-    if variant_key in BASE_VARIANT_KEYS:
-        return name
-    return f"{name}-{variant_key}"
 
 
 def load_app(manifest_path: Path) -> dict:

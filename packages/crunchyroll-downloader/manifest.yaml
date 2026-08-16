@@ -1,5 +1,4 @@
 name: crunchyroll-downloader
-docs:
 url: https://github.com/CuteTenshii/crunchyroll-downloader
 license: MIT
 pkgdesc: "Downloads anime from Crunchyroll and outputs them in a MKV file"

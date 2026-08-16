@@ -1,5 +1,4 @@
 name: marky
-docs:
 url: https://github.com/GRVYDEV/marky
 license: Apache-2.0
 arch: [x86_64, aarch64]

@@ -9,7 +9,7 @@ steps are plain bash.
 If you are an AI agent working from this guide:
 
 - **This repo (`missing-aur`)** — proceed on your own: manifest, local assets,
-  `README.md` table via `scripts/generate-readme.py`, `scripts/manage.py generate`, commits, and PRs here. No need to ask
+  `README.md` table (optional — CI regenerates it), `scripts/manage.py generate`, commits, and PRs here. No need to ask
   permission for each step unless the user said otherwise.
 - **Upstream README PR** — **never** fork the upstream project, edit their
   README, or open a PR there unless the user **explicitly** asks you to. After
@@ -78,8 +78,9 @@ docs:
 Optional `packages/<app>/icon.png` is shown in the README table; if missing, the
 generator writes `-` in the icon column.
 
-After editing a manifest, run `python3 scripts/generate-readme.py fix` to
-refresh the README table.
+You do **not** need to edit `README.md` yourself — the PR Check workflow
+regenerates the package table automatically. Skipping it is fine. If you update
+it manually anyway, that is fine too.
 
 **Avoid duplicating fields across variants.** If a field has the same value in
 every variant, hoist it to the top level. Only keep in the variant what actually
@@ -293,7 +294,13 @@ python3 scripts/manage.py check-updates             # check + regenerate if newe
 python3 scripts/manage.py clean                     # remove all generated files
 python3 scripts/generate-readme.py check            # CI: README table matches manifests
 python3 scripts/generate-readme.py fix              # regenerate README package table
+python3 scripts/lint_manifest.py check [app...]     # lint manifests
+python3 scripts/fix_icon.py check [app...]          # verify icon.png is 32x32
 ```
+
+Pull requests that touch `packages/` get a welcome comment on open and a fresh
+check recap comment on each update (old recaps are replaced). The workflow also
+updates `README.md` for you — no need to do it in your PR.
 
 ## Pull request rules
 
@@ -303,9 +310,7 @@ python3 scripts/generate-readme.py fix              # regenerate README package 
   [New packages](#new-packages--set-pkgver-to-0)).
 - Clear commit messages: `feat: add foo-bin`, `fix: update kissmp versionChecker`.
 - Run `python3 scripts/manage.py generate packages/<app>` locally and check the PKGBUILD before submitting.
-- Add a `docs` block to the manifest and run `python3 scripts/generate-readme.py fix` to update the README table.
-  - `docs.description` is optional — omit it to reuse `pkgdesc` in the README table.
-  - `docs.externalAur` lists related AUR packages maintained elsewhere (purple badges).
+- Add a `docs` block to the manifest (`docs.description` is optional — defaults to `pkgdesc`; `docs.externalAur` for purple badges). The README table is updated by CI — editing it yourself is optional.
 
 ## Upstream README PR
 
