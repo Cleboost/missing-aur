@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from lib.git_changed import changed_apps, manifest_paths
 from lib.issues import Issue, format_pr_report, is_blocking
+from lib.paths import ICON_SIZE
 from fix_icon import check_icon
 from lint_manifest import check_manifest
 
