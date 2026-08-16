@@ -13,8 +13,17 @@ def changed_apps(base_ref: str) -> list[str]:
         check=False,
     )
     if result.returncode != 0:
-        print(result.stderr, file=sys.stderr)
-        sys.exit(1)
+        fallback = subprocess.run(
+            ["git", "diff", "--name-only", f"{base_ref}..HEAD"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if fallback.returncode == 0:
+            result = fallback
+        else:
+            detail = result.stderr.strip() or fallback.stderr.strip()
+            raise RuntimeError(detail or f"git diff failed for {base_ref}")
 
     apps: set[str] = set()
     for line in result.stdout.splitlines():

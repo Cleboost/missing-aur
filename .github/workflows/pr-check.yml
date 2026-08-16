@@ -43,6 +43,7 @@ jobs:
         with:
           commit_message: "fix: resize package icons to 64x64"
           file_pattern: packages/**/icon.png
+          skip_fetch: true
 
       - name: Optimize manifests
         if: steps.packages.outputs.apps != ''
@@ -55,6 +56,7 @@ jobs:
         with:
           commit_message: "refactor: optimize package manifests"
           file_pattern: packages/**/manifest.yaml
+          skip_fetch: true
 
       - name: Update README package table
         if: steps.packages.outputs.apps != ''
@@ -67,6 +69,11 @@ jobs:
         with:
           commit_message: "docs: update README package table"
           file_pattern: README.md
+          skip_fetch: true
+
+      - name: Refresh base ref for recap
+        if: always() && steps.packages.outputs.apps != ''
+        run: git fetch origin "${{ github.base_ref }}" --no-tags
 
       - name: Run PR checks
         id: check
@@ -75,10 +82,11 @@ jobs:
         run: |
           python3 scripts/pr_check.py \
             --base "origin/${{ github.base_ref }}" \
+            --apps ${{ steps.packages.outputs.apps }} \
             --output pr-report.md \
-            --icon-commit "${{ steps.icon_commit.outputs.commit_sha }}" \
+            --icon-commit "${{ steps.icon_commit.outputs.commit_hash }}" \
             --manifest-fixes manifest-fixes.json \
-            --readme-commit "${{ steps.readme_commit.outputs.commit_sha }}"
+            --readme-commit "${{ steps.readme_commit.outputs.commit_hash }}"
 
       - name: Post check recap
         if: always() && steps.packages.outputs.apps != ''
@@ -89,7 +97,10 @@ jobs:
           script: |
             const fs = require('fs');
             const marker = '<!-- missing-aur-recap -->';
-            const recap = fs.readFileSync(process.env.RECAP_PATH, 'utf8');
+            const recapPath = process.env.RECAP_PATH;
+            const recap = fs.existsSync(recapPath)
+              ? fs.readFileSync(recapPath, 'utf8')
+              : '## Package check recap\n\nRecap generation failed — see the workflow logs.';
             const body = `${marker}\n${recap}`;
 
             const { owner, repo } = context.repo;
