@@ -295,7 +295,7 @@ python3 scripts/manage.py clean                     # remove all generated files
 python3 scripts/generate-readme.py check            # CI: README table matches manifests
 python3 scripts/generate-readme.py fix              # regenerate README package table
 python3 scripts/lint_manifest.py check [app...]     # lint manifests
-python3 scripts/fix_icon.py check [app...]          # verify icon.png is 48x48
+python3 scripts/fix_icon.py check [app...]          # verify icon.png is 64x64
 ```
 
 Pull requests that touch `packages/` get a welcome comment on open and a fresh
