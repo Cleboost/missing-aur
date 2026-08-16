@@ -1,0 +1,24 @@
+name: PR Welcome
+
+on:
+  pull_request:
+    types: [opened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post welcome message
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: pr-welcome
+          message: |
+            Hi! Thanks for opening this PR and contributing to **missing-aur**.
+
+            I'll run the package checks shortly and post a recap comment when I'm done.
+            If anything needs a tweak, I may also push small fix commits to your branch.
+
+            Hang tight — I'll be back in a moment.

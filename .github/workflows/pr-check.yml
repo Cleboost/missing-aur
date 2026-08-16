@@ -1,0 +1,123 @@
+name: PR Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  package-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Fetch base branch
+        run: git fetch origin "${{ github.base_ref }}"
+
+      - name: Install dependencies
+        run: pip install -r scripts/requirements.txt
+
+      - name: Detect changed packages
+        id: packages
+        run: |
+          apps=$(python3 scripts/pr_packages.py --base "origin/${{ github.base_ref }}")
+          echo "apps=${apps}" >> "$GITHUB_OUTPUT"
+          echo "Changed packages: ${apps:-<none>}"
+
+      - name: Resize package icons
+        if: steps.packages.outputs.apps != ''
+        run: python3 scripts/fix_icon.py fix ${{ steps.packages.outputs.apps }}
+
+      - name: Commit icon fixes
+        if: steps.packages.outputs.apps != ''
+        id: icon_commit
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "fix: resize package icons to 32x32"
+          file_pattern: packages/**/icon.png
+
+      - name: Optimize manifests
+        if: steps.packages.outputs.apps != ''
+        run: python3 scripts/lint_manifest.py fix ${{ steps.packages.outputs.apps }}
+
+      - name: Commit manifest optimizations
+        if: steps.packages.outputs.apps != ''
+        id: manifest_commit
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "refactor: optimize package manifests"
+          file_pattern: packages/**/manifest.yaml
+
+      - name: Update README package table
+        if: steps.packages.outputs.apps != ''
+        run: python3 scripts/generate-readme.py fix
+
+      - name: Commit README updates
+        if: steps.packages.outputs.apps != ''
+        id: readme_commit
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "docs: update README package table"
+          file_pattern: README.md
+
+      - name: Run PR checks
+        id: check
+        if: always() && steps.packages.outputs.apps != ''
+        continue-on-error: true
+        run: |
+          python3 scripts/pr_check.py \
+            --base "origin/${{ github.base_ref }}" \
+            --output pr-report.md \
+            --icon-commit "${{ steps.icon_commit.outputs.commit_sha }}" \
+            --manifest-commit "${{ steps.manifest_commit.outputs.commit_sha }}" \
+            --readme-commit "${{ steps.readme_commit.outputs.commit_sha }}"
+
+      - name: Post check recap
+        if: always() && steps.packages.outputs.apps != ''
+        uses: actions/github-script@v7
+        env:
+          RECAP_PATH: pr-report.md
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- missing-aur-recap -->';
+            const recap = fs.readFileSync(process.env.RECAP_PATH, 'utf8');
+            const body = `${marker}\n${recap}`;
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            for (const comment of comments) {
+              if (comment.body?.includes(marker)) {
+                await github.rest.issues.deleteComment({
+                  owner,
+                  repo,
+                  comment_id: comment.id,
+                });
+              }
+            }
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number,
+              body,
+            });
+
+      - name: Fail on remaining issues
+        if: steps.packages.outputs.apps != '' && steps.check.outcome == 'failure'
+        run: exit 1
