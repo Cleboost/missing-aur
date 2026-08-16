@@ -1,6 +1,5 @@
 name: aider-desk
 docs:
-  description: "Transparent, steerable AI orchestration platform for software engineers"
 url: https://github.com/hotovo/aider-desk
 license: Apache-2.0
 arch: [x86_64, aarch64]
@@ -8,8 +7,7 @@ pkgdesc: "Transparent, steerable AI orchestration platform for software engineer
 
 variants:
   appimage:
-    pkgver: 0.78.0
-    pkgrel: 1
+    pkgver: "0"
     depends: [fuse2]
     options: ["!strip"]
     versionChecker: "curl -s https://api.github.com/repos/hotovo/aider-desk/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
