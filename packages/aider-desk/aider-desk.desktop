@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=AiderDesk
+Comment=Transparent, steerable AI orchestration for software engineers
+Exec=aider-desk
+Icon=aider-desk
+Terminal=false
+Type=Application
+Categories=Development;Utility;
+StartupWMClass=aider-desk
