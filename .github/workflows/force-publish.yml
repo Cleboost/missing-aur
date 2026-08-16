@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       package:
-        description: 'Package dir, e.g. "psst/psst-bin" or "temper/temper-git"'
+        description: 'App or variant under packages/, e.g. "psst" or "temper/temper-bin" (packages/ prefix optional)'
         required: true
         type: string
 
