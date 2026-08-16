@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=CodePilot
+Comment=A multi-model AI agent desktop client
+Exec=codepilot
+Icon=codepilot
+Terminal=false
+Type=Application
+Categories=Development;IDE;
+StartupWMClass=codepilot
