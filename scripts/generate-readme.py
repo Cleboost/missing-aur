@@ -15,7 +15,7 @@ except ImportError:
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PACKAGES_DIR = REPO_ROOT / "packages"
 README = REPO_ROOT / "README.md"
-ICONS_DIR = REPO_ROOT / "docs" / "icons"
+ICON_FILENAME = "icon.png"
 
 TABLE_START = "| | App | Packages |"
 TABLE_SEP = "|:---:|:---|:---|"
@@ -33,6 +33,7 @@ def pkgname(name: str, variant_key: str) -> str:
 def load_app(manifest_path: Path) -> dict:
     data = yaml.safe_load(manifest_path.read_text()) or {}
     docs = data.get("docs") or {}
+    app_dir = manifest_path.parent
     name = data["name"]
     url = data.get("url", "")
     variants = data.get("variants") or {}
@@ -47,10 +48,18 @@ def load_app(manifest_path: Path) -> dict:
         "name": name,
         "url": url,
         "description": description,
-        "icon": docs.get("icon", name),
+        "app_dir": app_dir,
         "maintained": maintained,
         "externalAur": sorted(docs.get("externalAur") or []),
     }
+
+
+def icon_cell(app_dir: Path) -> str:
+    icon = app_dir / ICON_FILENAME
+    if icon.is_file():
+        rel = icon.relative_to(REPO_ROOT).as_posix()
+        return f"![](./{rel})"
+    return "-"
 
 
 def badge(pkgname: str, *, external: bool = False) -> str:
@@ -63,16 +72,12 @@ def badge(pkgname: str, *, external: bool = False) -> str:
 
 
 def render_row(app: dict) -> str:
-    icon_path = ICONS_DIR / f"{app['icon']}.png"
-    if not icon_path.exists():
-        print(f"  Warning: missing icon {icon_path.relative_to(REPO_ROOT)}", file=sys.stderr)
-
     badges = [badge(p) for p in app["maintained"]]
     badges.extend(badge(p, external=True) for p in app["externalAur"])
     badge_cell = " ".join(badges)
 
     return (
-        f"| ![](./docs/icons/{app['icon']}.png) "
+        f"| {icon_cell(app['app_dir'])} "
         f"| **[{app['name']}]({app['url']})**<br>{app['description']} "
         f"| {badge_cell} |"
     )

@@ -22,6 +22,7 @@ If you are an AI agent working from this guide:
 packages/
   <app>/
     manifest.yaml      ← everything goes here
+    icon.png           ← optional, shown in README.md
     <file>.desktop     ← local assets (optional)
 ```
 
@@ -70,10 +71,12 @@ ignored by PKGBUILD generation and used to build the README table:
 ```yaml
 docs:
   description: "One-line summary shown in README.md"  # optional, defaults to pkgdesc
-  icon: foo              # optional, defaults to name (docs/icons/foo.png)
   externalAur:           # AUR packages we do not maintain (purple badges)
     - foo-git
 ```
+
+Optional `packages/<app>/icon.png` is shown in the README table; if missing, the
+generator writes `-` in the icon column.
 
 After editing a manifest, run `python3 scripts/generate-readme.py fix` to
 refresh the README table.
