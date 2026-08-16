@@ -17,6 +17,7 @@ except ImportError:
 from lib.paths import (
     BASE_VARIANT_KEYS,
     ICON_FILENAME,
+    ICON_SIZE,
     PACKAGES_DIR,
     README,
     REPO_ROOT,
@@ -56,7 +57,9 @@ def icon_cell(app_dir: Path) -> str:
     icon = app_dir / ICON_FILENAME
     if icon.is_file():
         rel = icon.relative_to(REPO_ROOT).as_posix()
-        return f"![](./{rel})"
+        return (
+            f'<img src="./{rel}" width="{ICON_SIZE}" height="{ICON_SIZE}" alt="">'
+        )
     return "-"
 
 

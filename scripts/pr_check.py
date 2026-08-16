@@ -58,7 +58,7 @@ def describe_auto_fixes(
     icon_files = commit_files(icon_commit)
     if icon_files:
         paths = ", ".join(f"`{path}`" for path in icon_files)
-        fixes.append(f"Resized package icons to 32×32: {paths}")
+        fixes.append(f"Resized package icons to {ICON_SIZE}×{ICON_SIZE}: {paths}")
 
     manifest_files = commit_files(manifest_commit)
     if manifest_files:

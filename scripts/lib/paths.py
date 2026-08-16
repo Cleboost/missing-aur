@@ -5,7 +5,7 @@ PACKAGES_DIR = REPO_ROOT / "packages"
 README = REPO_ROOT / "README.md"
 
 ICON_FILENAME = "icon.png"
-ICON_SIZE = 32
+ICON_SIZE = 48
 
 BASE_VARIANT_KEYS = {"base", "stable", "release"}
 
