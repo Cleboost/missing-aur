@@ -1,4 +1,6 @@
 name: kissmp
+docs:
+  description: "Multiplayer mod for BeamNG.drive"
 url: https://github.com/TheHellBox/KISS-multiplayer
 license: Apache-2.0
 options: ["!strip"]

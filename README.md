@@ -36,7 +36,7 @@ A GitHub Action runs every night and:
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) to add a new package. The short version: create `packages/<app>/manifest.yaml`, run `python3 manage.py generate packages/<app>`, done.
+See [CONTRIBUTING.md](CONTRIBUTING.md) to add a new package. The short version: create `packages/<app>/manifest.yaml`, run `python3 scripts/manage.py generate packages/<app>` and `python3 scripts/generate-readme.py fix`, done.
 
 ## Upstream maintainers
 

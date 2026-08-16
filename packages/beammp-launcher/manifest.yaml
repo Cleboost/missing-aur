@@ -1,4 +1,8 @@
 name: beammp-launcher
+docs:
+  description: "Multiplayer launcher/client for BeamNG.drive"
+  externalAur:
+    - beammp-launcher-git
 url: https://github.com/BeamMP/BeamMP-Launcher
 license: LGPL3
 arch: [x86_64]

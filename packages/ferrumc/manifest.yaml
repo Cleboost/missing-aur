@@ -1,4 +1,7 @@
 name: ferrumc
+docs:
+  externalAur:
+    - ferrumc-git
 url: https://github.com/ferrumc-rs/ferrumc
 license: MIT
 arch: [x86_64, aarch64]

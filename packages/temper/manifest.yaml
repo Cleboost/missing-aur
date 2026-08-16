@@ -1,4 +1,6 @@
 name: temper
+docs:
+  description: "Stupidly fast open-source Minecraft server written in Rust"
 url: https://github.com/temper-mc/temper
 license: GPL3
 arch: [x86_64, aarch64]
