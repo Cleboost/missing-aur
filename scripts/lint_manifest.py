@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -11,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from lib.git_changed import manifest_paths
 from lib.issues import Issue
-from lib.manifest_fix import apply_safe_fixes
+from lib.manifest_fix import apply_safe_fixes, effective_pkgver, is_git_variant
 from lib.manifest_io import load_manifest, normalized_pkgdesc
 from lib.paths import HOISTABLE_VARIANT_FIELDS, REQUIRED_TOP_LEVEL
 
@@ -23,7 +24,7 @@ def _variant_dicts(data: dict) -> dict[str, dict]:
     return {key: (value or {}) for key, value in variants.items()}
 
 
-def check_manifest(path: Path) -> list[Issue]:
+def check_manifest(path: Path, base_ref: str | None = None) -> list[Issue]:
     issues: list[Issue] = []
     rel = path.relative_to(path.parents[2]).as_posix()
     app_name = path.parent.name
@@ -54,6 +55,50 @@ def check_manifest(path: Path) -> list[Issue]:
     variants = _variant_dicts(data)
     if not variants:
         return issues
+
+    if data.get("pkgrel") is not None:
+        issues.append(
+            Issue(
+                rel,
+                "forbidden-pkgrel",
+                "`pkgrel` must not be set in the manifest; it defaults to `1` in generated PKGBUILDs.",
+                fixable=True,
+            )
+        )
+
+    for key, variant in variants.items():
+        if not isinstance(variant, dict):
+            continue
+        if variant.get("pkgrel") is not None:
+            issues.append(
+                Issue(
+                    rel,
+                    "forbidden-pkgrel",
+                    f"Variant {key!r} must not set `pkgrel`; it defaults to `1` in generated PKGBUILDs.",
+                    fixable=True,
+                )
+            )
+
+    if base_ref:
+        from lib.git_changed import is_new_manifest
+
+        if is_new_manifest(base_ref, path):
+            for key, variant in variants.items():
+                if not isinstance(variant, dict) or is_git_variant(key, variant):
+                    continue
+                pkgver = effective_pkgver(data, variant)
+                if pkgver is not None and pkgver != "0":
+                    issues.append(
+                        Issue(
+                            rel,
+                            "new-package-pkgver",
+                            (
+                                f"Variant {key!r} must use `pkgver: \"0\"` for the initial AUR push "
+                                f"(got {pkgver!r})."
+                            ),
+                            fixable=True,
+                        )
+                    )
 
     for key, variant in variants.items():
         if not isinstance(variant, dict):
@@ -125,8 +170,8 @@ def check_manifest(path: Path) -> list[Issue]:
     return issues
 
 
-def fix_manifest(path: Path) -> bool:
-    return apply_safe_fixes(path)
+def fix_manifest(path: Path, base_ref: str | None = None) -> list[str]:
+    return apply_safe_fixes(path, base_ref=base_ref)
 
 
 def main() -> None:
@@ -135,6 +180,16 @@ def main() -> None:
 
     for name in ("check", "fix"):
         parser = sub.add_parser(name, help=f"{name} manifests")
+        parser.add_argument(
+            "--base",
+            default="origin/main",
+            help="Git base ref for new-package checks (default: origin/main)",
+        )
+        parser.add_argument(
+            "--fixes-out",
+            default="",
+            help="Write JSON list of applied auto-fix descriptions (fix only)",
+        )
         parser.add_argument(
             "apps",
             nargs="*",
@@ -147,7 +202,7 @@ def main() -> None:
     if args.cmd == "check":
         issues: list[Issue] = []
         for path in paths:
-            issues.extend(check_manifest(path))
+            issues.extend(check_manifest(path, base_ref=args.base))
         if issues:
             for issue in issues:
                 print(issue.format_line(), file=sys.stderr)
@@ -156,10 +211,15 @@ def main() -> None:
         return
 
     fixed = 0
+    all_fixes: list[str] = []
     for path in paths:
-        if fix_manifest(path):
+        fixes = fix_manifest(path, base_ref=args.base)
+        if fixes:
+            all_fixes.extend(fixes)
             print(f"Optimized {path.relative_to(path.parents[2])}")
             fixed += 1
+    if args.fixes_out:
+        Path(args.fixes_out).write_text(json.dumps(all_fixes, indent=2) + "\n")
     print(f"Optimized {fixed} manifest(s).")
 
 

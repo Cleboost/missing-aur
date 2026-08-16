@@ -46,7 +46,7 @@ jobs:
 
       - name: Optimize manifests
         if: steps.packages.outputs.apps != ''
-        run: python3 scripts/lint_manifest.py fix ${{ steps.packages.outputs.apps }}
+        run: python3 scripts/lint_manifest.py fix --base "origin/${{ github.base_ref }}" --fixes-out manifest-fixes.json ${{ steps.packages.outputs.apps }}
 
       - name: Commit manifest optimizations
         if: steps.packages.outputs.apps != ''
@@ -77,7 +77,7 @@ jobs:
             --base "origin/${{ github.base_ref }}" \
             --output pr-report.md \
             --icon-commit "${{ steps.icon_commit.outputs.commit_sha }}" \
-            --manifest-commit "${{ steps.manifest_commit.outputs.commit_sha }}" \
+            --manifest-fixes manifest-fixes.json \
             --readme-commit "${{ steps.readme_commit.outputs.commit_sha }}"
 
       - name: Post check recap

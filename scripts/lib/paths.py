@@ -23,7 +23,6 @@ HOISTABLE_VARIANT_FIELDS = {
     "backup",
     "groups",
     "pkgdesc",
-    "pkgrel",
     "versionChecker",
     "pkgver",
 }

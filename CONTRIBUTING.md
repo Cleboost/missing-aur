@@ -209,7 +209,7 @@ Optional when you want the default:
 
 | Field | Default |
 |---|---|
-| `pkgrel` | `1` |
+| `pkgrel` | `1` in generated PKGBUILDs — **do not** set it in the manifest |
 | `arch` | `[x86_64]` |
 | `pkgver` | `0` (default for git variants with a `pkgver_func`; required for all other new packages — see [New packages](#new-packages--set-pkgver-to-0)) |
 | `sha256sums` | `SKIP` (filled in automatically by `updpkgsums`) |
@@ -268,8 +268,9 @@ If upstream already ships a `.desktop` file, point to its raw URL instead (see
 `packages/psst/manifest.yaml`).
 
 Packaging-only fixes (desktop entry, install path, etc.) with no upstream version
-change require a manual `pkgrel` bump in the manifest. The nightly bot only
-resets `pkgrel` to `1` when `pkgver` changes.
+change are handled by bumping `pkgrel` in the generated PKGBUILD when needed; do
+not add `pkgrel` to the manifest. The nightly bot resets `pkgrel` to `1` when
+`pkgver` changes.
 
 ## versionChecker
 
@@ -294,7 +295,7 @@ python3 scripts/manage.py check-updates             # check + regenerate if newe
 python3 scripts/manage.py clean                     # remove all generated files
 python3 scripts/generate-readme.py check            # CI: README table matches manifests
 python3 scripts/generate-readme.py fix              # regenerate README package table
-python3 scripts/lint_manifest.py check [app...]     # lint manifests
+python3 scripts/lint_manifest.py check --base origin/main [app...]  # lint manifests
 python3 scripts/fix_icon.py check [app...]          # verify icon.png is 64x64
 ```
 
@@ -307,7 +308,8 @@ updates `README.md` for you — no need to do it in your PR.
 - **One package per PR.**
 - **New AUR packages: set `pkgver: "0"`** on every variant except `-git`, so
   the GitHub Action performs the initial push (see
-  [New packages](#new-packages--set-pkgver-to-0)).
+  [New packages](#new-packages--set-pkgver-to-0)). CI auto-fixes this on new manifests.
+- **Do not set `pkgrel`** in the manifest — CI removes it; PKGBUILDs default to `1`.
 - Clear commit messages: `feat: add foo-bin`, `fix: update kissmp versionChecker`.
 - Run `python3 scripts/manage.py generate packages/<app>` locally and check the PKGBUILD before submitting.
 - Add a `docs` block to the manifest (`docs.description` is optional — defaults to `pkgdesc`; `docs.externalAur` for purple badges). The README table is updated by CI — editing it yourself is optional.
