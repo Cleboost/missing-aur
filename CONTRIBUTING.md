@@ -84,7 +84,30 @@ it manually anyway, that is fine too.
 
 **Avoid duplicating fields across variants.** If a field has the same value in
 every variant, hoist it to the top level. Only keep in the variant what actually
-differs between variants (e.g. `conflicts`, `pkgver`, `source`).
+differs between variants (e.g. `pkgver`, `source`).
+
+## Variant relations (`provides` / `conflicts`)
+
+By default, every variant is treated as an **interchangeable alternative** for
+the same app. The generator injects these PKGBUILD fields automatically — do
+**not** write them in the manifest unless you need extra entries:
+
+| Injected field | Value |
+|---|---|
+| `provides` | the app `name` (e.g. `foo-bin` provides `foo`) |
+| `conflicts` | `name`, every sibling variant pkgname, and every `docs.externalAur` entry |
+
+Example: `name: foo` with variants `bin` and `git`, plus `docs.externalAur: [foo-git]`:
+
+- `foo-bin` → `provides=(foo)` `conflicts=(foo foo-git)`
+- `foo-git` → `provides=(foo)` `conflicts=(foo foo-bin)`
+
+List external AUR packages under `docs.externalAur` — they are added to
+`conflicts` automatically. No need to repeat them in each variant.
+
+For apps whose variants are **independent products** (not alternatives), set
+`providesBase: false` at the top level and declare `provides` / `conflicts`
+manually per variant (see `packages/kissmp/manifest.yaml`).
 
 ## New packages — set `pkgver` to `0`
 
@@ -137,12 +160,10 @@ url: https://github.com/author/foo
 license: GPL3
 arch: [x86_64, aarch64]          # shared by both variants
 pkgdesc: "Foo"                    # identical in both → hoist it
-provides: [foo]                   # identical in both → hoist it
 
 variants:
   bin:
     pkgver: "1.2.3"
-    conflicts: [foo, foo-git]
     versionChecker: "..."
     source:
       - "foo-${pkgver}.tar.gz::${url}/releases/download/v${pkgver}/foo-linux.tar.gz"
@@ -152,7 +173,6 @@ variants:
   git:
     depends: [gcc-libs, glibc]
     makedepends: [cargo, git]
-    conflicts: [foo, foo-bin]
     source:
       - "foo::git+${url}.git"
     pkgver_func: |

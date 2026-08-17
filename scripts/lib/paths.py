@@ -16,8 +16,6 @@ HOISTABLE_VARIANT_FIELDS = {
     "depends",
     "makedepends",
     "optdepends",
-    "provides",
-    "conflicts",
     "replaces",
     "options",
     "backup",

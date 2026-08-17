@@ -9,6 +9,12 @@ import yaml
 
 from .manifest_io import load_manifest, normalized_pkgdesc
 from .paths import HOISTABLE_VARIANT_FIELDS, REPO_ROOT
+from .variant_relations import (
+    as_string_list,
+    expected_auto_conflicts,
+    provides_base_enabled,
+    redundant_provides_value,
+)
 
 
 def is_git_variant(variant_key: str, variant: dict) -> bool:
@@ -198,6 +204,93 @@ def _replace_external_aur(lines: list[str], packages: list[str]) -> bool:
     return True
 
 
+def _remove_top_level_field(lines: list[str], field: str) -> bool:
+    pattern = re.compile(rf"^{re.escape(field)}:.*(?:\n|$)")
+    kept = [line for line in lines if not pattern.match(line)]
+    changed = len(kept) != len(lines)
+    lines[:] = kept
+    return changed
+
+
+def _remove_variant_field_for_key(lines: list[str], variant_key: str, field: str) -> bool:
+    in_variant = False
+    kept: list[str] = []
+    removed = False
+    field_pattern = re.compile(rf"^    {re.escape(field)}:.*$")
+
+    for line in lines:
+        if re.match(rf"^  {re.escape(variant_key)}:\s*$", line.rstrip("\n")):
+            in_variant = True
+            kept.append(line)
+            continue
+        if in_variant:
+            if re.match(r"^  \w+:\s*$", line.rstrip("\n")):
+                in_variant = False
+            elif field_pattern.match(line.rstrip("\n")):
+                removed = True
+                continue
+        kept.append(line)
+
+    changed = removed
+    lines[:] = kept
+    return changed
+
+
+def _replace_variant_conflicts(lines: list[str], variant_key: str, conflicts: list[str]) -> bool:
+    in_variant = False
+    replacement = f"    conflicts: {yaml.dump(conflicts, default_flow_style=True).strip()}\n"
+    for index, line in enumerate(lines):
+        if re.match(rf"^  {re.escape(variant_key)}:\s*$", line.rstrip("\n")):
+            in_variant = True
+            continue
+        if in_variant:
+            if re.match(r"^  \w+:\s*$", line.rstrip("\n")):
+                break
+            if re.match(r"^    conflicts:\s*", line.rstrip("\n")):
+                if line == replacement:
+                    return False
+                lines[index] = replacement
+                return True
+    return False
+
+
+def _fix_redundant_variant_relations(lines: list[str], data: dict) -> list[str]:
+    if not provides_base_enabled(data):
+        return []
+
+    fixes: list[str] = []
+    name = data.get("name")
+    variants = data.get("variants") or {}
+    if not name or not isinstance(variants, dict):
+        return fixes
+
+    if redundant_provides_value(data, data.get("provides")):
+        if _remove_top_level_field(lines, "provides"):
+            fixes.append("provides")
+
+    for key, variant in variants.items():
+        if not isinstance(variant, dict):
+            continue
+        if redundant_provides_value(data, variant.get("provides")):
+            if _remove_variant_field_for_key(lines, key, "provides"):
+                fixes.append(f"provides:{key}")
+
+        manual_conflicts = set(as_string_list(variant.get("conflicts")))
+        auto_conflicts = expected_auto_conflicts(data, key, variant)
+        if not manual_conflicts:
+            continue
+        if manual_conflicts <= auto_conflicts:
+            if _remove_variant_field_for_key(lines, key, "conflicts"):
+                fixes.append(f"conflicts:{key}")
+        else:
+            extra = sorted(manual_conflicts - auto_conflicts)
+            if extra != sorted(manual_conflicts):
+                if _replace_variant_conflicts(lines, key, extra):
+                    fixes.append(f"conflicts:{key}")
+
+    return fixes
+
+
 def apply_safe_fixes(path: Path, base_ref: str | None = None) -> list[str]:
     rel = _manifest_rel(path)
     fixes: list[str] = []
@@ -255,6 +348,28 @@ def apply_safe_fixes(path: Path, base_ref: str | None = None) -> list[str]:
         changed = True
         for field in hoisted:
             fixes.append(f"Hoisted `{field}` to the top level in `{rel}`")
+
+    relation_fixes = _fix_redundant_variant_relations(lines, data)
+    if relation_fixes:
+        changed = True
+        for item in relation_fixes:
+            if item.startswith("provides:"):
+                variant = item.split(":", 1)[1]
+                fixes.append(
+                    f"Removed redundant `provides` from variant `{variant}` in `{rel}` "
+                    "(injected automatically at PKGBUILD generation)"
+                )
+            elif item.startswith("conflicts:"):
+                variant = item.split(":", 1)[1]
+                fixes.append(
+                    f"Removed redundant `conflicts` from variant `{variant}` in `{rel}` "
+                    "(injected automatically at PKGBUILD generation)"
+                )
+            elif item == "provides":
+                fixes.append(
+                    f"Removed redundant top-level `provides` from `{rel}` "
+                    "(injected automatically at PKGBUILD generation)"
+                )
 
     if changed:
         path.write_text("".join(lines))

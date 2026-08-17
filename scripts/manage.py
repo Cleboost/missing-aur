@@ -9,6 +9,9 @@ fields, and the build functions are written as plain bash.
 
 Variant keys listed in BASE_VARIANT_KEYS are treated as the "base" package:
 no suffix is appended, so `name: foo` + variant `base` → pkgname `foo`.
+
+Unless `providesBase: false`, each variant automatically provides `name` and
+conflicts with `name`, sibling variants, and `docs.externalAur` packages.
 """
 
 import sys
@@ -20,19 +23,19 @@ import argparse
 import json
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
 try:
     import yaml
 except ImportError:
     print("PyYAML required: pacman -S python-yaml", file=sys.stderr)
     sys.exit(1)
 
+from lib.paths import PACKAGES_DIR, REPO_ROOT
+from lib.variant_relations import load_packages
+
 MAINTAINER  = "Cleboost <clement.balarot@gmail.com>"
 CONTRIBUTOR = "missing-aur project <https://github.com/Cleboost/missing-aur>"
-REPO_ROOT   = Path(__file__).resolve().parent.parent
-PACKAGES_DIR = REPO_ROOT / "packages"
-
-# Variant keys that represent the canonical/base package — no suffix appended.
-BASE_VARIANT_KEYS = {"base", "stable", "release"}
 
 # Suffix automatically appended to pkgdesc based on the pkgname ending.
 DESC_SUFFIX = {
@@ -40,30 +43,6 @@ DESC_SUFFIX = {
     "-git":      "(git version)",
     "-appimage": "(AppImage)",
 }
-
-
-# ── Manifest loading ──────────────────────────────────────────────────────────
-
-def load_packages(manifest_path: Path) -> list[tuple[str | None, dict]]:
-    """Return (variant_key, resolved_pkg_dict) for each package in the manifest."""
-    data     = yaml.safe_load(manifest_path.read_text())
-    data.pop("docs", None)
-    name     = data.pop("name", None)
-    variants = data.pop("variants", None)
-    shared   = data
-
-    if not variants:
-        # Flat single-package manifest (pkgname must be set explicitly).
-        return [(None, shared)]
-
-    packages = []
-    for key, variant in variants.items():
-        pkg = {**shared, **(variant or {})}
-        pkg.setdefault("pkgname", name if key in BASE_VARIANT_KEYS else (f"{name}-{key}" if name else None))
-        if not pkg.get("pkgname"):
-            raise ValueError(f"{manifest_path}: variant {key!r} has no pkgname (set `name:` or `pkgname:`)")
-        packages.append((key, pkg))
-    return packages
 
 
 def find_manifests() -> list[Path]:
