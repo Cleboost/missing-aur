@@ -9,7 +9,7 @@ pkgdesc: "Fast and multi-platform Spotify client with native GUI"
 
 variants:
   bin:
-    pkgver: 2026.06.30_6267ec1
+    pkgver: 2026.08.17_f8c11b9
     depends: [gtk3, alsa-lib, openssl]
     versionChecker: "curl -s https://api.github.com/repos/jpochyla/psst/releases/tags/rolling | jq -r '.name | split(\"(\")[1] | split(\")\")[0] | gsub(\"-\"; \"_\")'"
     source:
