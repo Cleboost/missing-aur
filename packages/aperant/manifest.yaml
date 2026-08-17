@@ -9,7 +9,7 @@ docs:
 
 variants:
   appimage:
-    pkgver: "0"
+    pkgver: 2.7.6
     depends: [fuse2]
     options: ["!strip"]
     provides: [auto-claude]
