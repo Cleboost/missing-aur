@@ -1,0 +1,29 @@
+name: aperant
+url: https://github.com/AndyMik90/Aperant
+license: AGPL3
+arch: [x86_64]
+pkgdesc: "Autonomous multi-session AI coding"
+
+docs:
+  description: "Autonomous multi-session AI coding desktop client (formerly Auto-Claude)"
+
+variants:
+  appimage:
+    pkgver: "0"
+    depends: [fuse2]
+    options: ["!strip"]
+    provides: [auto-claude]
+    versionChecker: "curl -s https://api.github.com/repos/AndyMik90/Aperant/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
+    source:
+      - "aperant-appimage-${pkgver}.AppImage::${url}/releases/download/v${pkgver}/Auto-Claude-${pkgver}-linux-x86_64.AppImage"
+      - "aperant.png::https://raw.githubusercontent.com/AndyMik90/Aperant/main/apps/frontend/resources/icons/256x256.png"
+      - "aperant.desktop::https://raw.githubusercontent.com/Cleboost/missing-aur/main/packages/aperant/aperant.desktop"
+    prepare: |
+      chmod +x "${srcdir}/aperant-appimage-${pkgver}.AppImage"
+    package: |
+      install -Dm755 "${srcdir}/aperant-appimage-${pkgver}.AppImage" "${pkgdir}/opt/aperant-appimage/aperant.AppImage"
+      install -dm755 "${pkgdir}/usr/bin"
+      ln -sf "/opt/aperant-appimage/aperant.AppImage" "${pkgdir}/usr/bin/aperant"
+      ln -sf "/opt/aperant-appimage/aperant.AppImage" "${pkgdir}/usr/bin/auto-claude"
+      install -Dm644 "${srcdir}/aperant.png" "${pkgdir}/usr/share/icons/hicolor/256x256/apps/aperant.png"
+      install -Dm644 "${srcdir}/aperant.desktop" "${pkgdir}/usr/share/applications/aperant.desktop"

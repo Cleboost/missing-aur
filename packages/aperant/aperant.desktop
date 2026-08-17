@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Aperant
+Comment=Autonomous multi-session AI coding
+Exec=aperant
+Icon=aperant
+Terminal=false
+Type=Application
+Categories=Development;IDE;
+StartupWMClass=Auto-Claude
