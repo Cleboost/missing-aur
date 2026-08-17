@@ -1,4 +1,7 @@
 name: codepilot
+docs:
+  externalAur:
+    - codepilot-bin
 url: https://github.com/op7418/CodePilot
 license: LicenseRef-BSL-1.1
 arch: [x86_64, aarch64]
@@ -8,6 +11,7 @@ variants:
   appimage:
     pkgver: 0.67.1
     depends: [fuse2]
+    conflicts: [codepilot-bin]
     options: ["!strip"]
     versionChecker: "curl -s https://api.github.com/repos/op7418/CodePilot/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
     source:
