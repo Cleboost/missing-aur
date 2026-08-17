@@ -1,4 +1,7 @@
 name: codepilot
+docs:
+  externalAur:
+    - codepilot-bin
 url: https://github.com/op7418/CodePilot
 license: LicenseRef-BSL-1.1
 arch: [x86_64, aarch64]

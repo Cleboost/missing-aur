@@ -15,6 +15,12 @@ from lib.issues import Issue
 from lib.manifest_fix import apply_safe_fixes, effective_pkgver, is_git_variant
 from lib.manifest_io import load_manifest, normalized_pkgdesc
 from lib.paths import HOISTABLE_VARIANT_FIELDS, REQUIRED_TOP_LEVEL
+from lib.variant_relations import (
+    as_string_list,
+    expected_auto_conflicts,
+    provides_base_enabled,
+    redundant_provides_value,
+)
 
 
 def _variant_dicts(data: dict) -> dict[str, dict]:
@@ -130,6 +136,64 @@ def check_manifest(path: Path, base_ref: str | None = None) -> list[Issue]:
                     fixable=True,
                 )
             )
+
+    if provides_base_enabled(data):
+        if redundant_provides_value(data, data.get("provides")):
+            issues.append(
+                Issue(
+                    rel,
+                    "redundant-provides",
+                    (
+                        f"`provides: [{data['name']}]` is injected automatically for every variant; "
+                        "remove it from the manifest."
+                    ),
+                    fixable=True,
+                )
+            )
+
+        for key, variant in variants.items():
+            if not isinstance(variant, dict):
+                continue
+            if redundant_provides_value(data, variant.get("provides")):
+                issues.append(
+                    Issue(
+                        rel,
+                        "redundant-provides",
+                        (
+                            f"Variant {key!r} sets `provides: [{data['name']}]`; "
+                            "this is injected automatically — remove it."
+                        ),
+                        fixable=True,
+                    )
+                )
+
+            manual_conflicts = set(as_string_list(variant.get("conflicts")))
+            auto_conflicts = expected_auto_conflicts(data, key, variant)
+            if manual_conflicts and manual_conflicts <= auto_conflicts:
+                issues.append(
+                    Issue(
+                        rel,
+                        "redundant-conflicts",
+                        (
+                            f"Variant {key!r} `conflicts` only lists auto-generated entries; "
+                            "remove it (base name, sibling variants, `docs.externalAur`)."
+                        ),
+                        fixable=True,
+                    )
+                )
+            elif manual_conflicts and manual_conflicts & auto_conflicts:
+                redundant = sorted(manual_conflicts & auto_conflicts)
+                issues.append(
+                    Issue(
+                        rel,
+                        "redundant-conflicts",
+                        (
+                            f"Variant {key!r} duplicates auto-generated conflicts "
+                            f"{redundant}; keep only extra entries."
+                        ),
+                        fixable=True,
+                    )
+                )
 
     docs = data.get("docs") or {}
     if data.get("docs") is None and "docs" in data:

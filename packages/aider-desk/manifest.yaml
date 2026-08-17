@@ -1,0 +1,38 @@
+name: aider-desk
+docs:
+url: https://github.com/hotovo/aider-desk
+license: Apache-2.0
+arch: [x86_64, aarch64]
+pkgdesc: "Transparent, steerable AI orchestration platform for software engineers"
+
+variants:
+  appimage:
+    pkgver: 0.78.0
+    depends: [fuse2]
+    options: ["!strip"]
+    versionChecker: "curl -s https://api.github.com/repos/hotovo/aider-desk/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
+    source:
+      x86_64:
+        - "aider-desk-appimage-${pkgver}-x86_64.AppImage::${url}/releases/download/v${pkgver}/aider-desk-${pkgver}-x86_64.AppImage"
+        - "aider-desk.png::https://raw.githubusercontent.com/hotovo/aider-desk/main/build/icon.png"
+        - "aider-desk.desktop::https://raw.githubusercontent.com/Cleboost/missing-aur/main/packages/aider-desk/aider-desk.desktop"
+      aarch64:
+        - "aider-desk-appimage-${pkgver}-aarch64.AppImage::${url}/releases/download/v${pkgver}/aider-desk-${pkgver}-arm64.AppImage"
+        - "aider-desk.png::https://raw.githubusercontent.com/hotovo/aider-desk/main/build/icon.png"
+        - "aider-desk.desktop::https://raw.githubusercontent.com/Cleboost/missing-aur/main/packages/aider-desk/aider-desk.desktop"
+    prepare: |
+      if [ "${CARCH}" = "x86_64" ]; then
+        chmod +x "${srcdir}/aider-desk-appimage-${pkgver}-x86_64.AppImage"
+      elif [ "${CARCH}" = "aarch64" ]; then
+        chmod +x "${srcdir}/aider-desk-appimage-${pkgver}-aarch64.AppImage"
+      fi
+    package: |
+      if [ "${CARCH}" = "x86_64" ]; then
+        install -Dm755 "${srcdir}/aider-desk-appimage-${pkgver}-x86_64.AppImage" "${pkgdir}/opt/aider-desk-appimage/aider-desk.AppImage"
+      elif [ "${CARCH}" = "aarch64" ]; then
+        install -Dm755 "${srcdir}/aider-desk-appimage-${pkgver}-aarch64.AppImage" "${pkgdir}/opt/aider-desk-appimage/aider-desk.AppImage"
+      fi
+      install -dm755 "${pkgdir}/usr/bin"
+      ln -sf "/opt/aider-desk-appimage/aider-desk.AppImage" "${pkgdir}/usr/bin/aider-desk"
+      install -Dm644 "${srcdir}/aider-desk.png" "${pkgdir}/usr/share/icons/hicolor/512x512/apps/aider-desk.png"
+      install -Dm644 "${srcdir}/aider-desk.desktop" "${pkgdir}/usr/share/applications/aider-desk.desktop"

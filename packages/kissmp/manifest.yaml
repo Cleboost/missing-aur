@@ -1,4 +1,5 @@
 name: kissmp
+providesBase: false
 docs:
   description: "Multiplayer mod for BeamNG.drive"
 url: https://github.com/TheHellBox/KISS-multiplayer
