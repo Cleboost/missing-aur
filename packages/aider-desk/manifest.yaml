@@ -7,7 +7,7 @@ pkgdesc: "Transparent, steerable AI orchestration platform for software engineer
 
 variants:
   appimage:
-    pkgver: 0.79.0
+    pkgver: 0.80.0
     depends: [fuse2]
     options: ["!strip"]
     versionChecker: "curl -s https://api.github.com/repos/hotovo/aider-desk/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
