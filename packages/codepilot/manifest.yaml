@@ -9,7 +9,7 @@ pkgdesc: "A multi-model AI agent desktop client"
 
 variants:
   appimage:
-    pkgver: 0.67.1
+    pkgver: 0.67.6
     depends: [fuse2]
     options: ["!strip"]
     versionChecker: "curl -s https://api.github.com/repos/op7418/CodePilot/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
