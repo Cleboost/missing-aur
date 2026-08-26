@@ -11,7 +11,24 @@ jobs:
   welcome:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Fetch base branch
+        run: git fetch origin "${{ github.base_ref }}"
+
+      - name: Detect changed packages
+        id: packages
+        run: |
+          apps=$(python3 scripts/pr_packages.py --base "origin/${{ github.base_ref }}")
+          echo "apps=${apps}" >> "$GITHUB_OUTPUT"
+          echo "Changed packages: ${apps:-<none>}"
+
       - name: Post welcome message
+        if: steps.packages.outputs.apps != ''
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: pr-welcome
