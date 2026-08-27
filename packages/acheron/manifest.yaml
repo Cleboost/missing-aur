@@ -1,0 +1,28 @@
+name: acheron
+docs:
+  externalAur:
+    - acheron-git
+url: https://github.com/ouwou/acheron
+license: GPL-3.0
+pkgdesc: "Alternative Discord client made in C++ with Qt 6"
+
+variants:
+  nightly:
+    pkgver: "0"
+    depends: [fuse2]
+    options: ["!strip"]
+    versionChecker: >-
+      curl -s https://api.github.com/repos/ouwou/acheron/commits/master |
+      jq -r '"\(.commit.author.date[0:10] | gsub("-"; "."))_\(.sha[0:7])"'
+    source:
+      - "acheron-nightly-${pkgver}.zip::https://nightly.link/ouwou/acheron/workflows/build/master/acheron-appimage.zip"
+      - "acheron.desktop::https://raw.githubusercontent.com/Cleboost/missing-aur/main/packages/acheron/acheron.desktop"
+      - "acheron.png::https://raw.githubusercontent.com/Cleboost/missing-aur/main/packages/acheron/acheron.png"
+    prepare: |
+      chmod +x "${srcdir}/Acheron-x86_64.AppImage"
+    package: |
+      install -Dm755 "${srcdir}/Acheron-x86_64.AppImage" "${pkgdir}/opt/acheron-nightly/acheron.AppImage"
+      install -dm755 "${pkgdir}/usr/bin"
+      ln -sf "/opt/acheron-nightly/acheron.AppImage" "${pkgdir}/usr/bin/acheron"
+      install -Dm644 "${srcdir}/acheron.png" "${pkgdir}/usr/share/icons/hicolor/512x512/apps/acheron.png"
+      install -Dm644 "${srcdir}/acheron.desktop" "${pkgdir}/usr/share/applications/acheron.desktop"
