@@ -325,6 +325,12 @@ updates `README.md` for you — no need to do it in your PR.
 
 ## Pull request rules
 
+- **Use the PR template** when adding a package. On GitHub, pick **📦 Add package**
+  from the template chooser when opening your PR — do not open a blank PR. Your
+  description must keep the **Package**, **Checklist**, and **Notes** sections
+  from [`.github/PULL_REQUEST_TEMPLATE/add-package.md`](.github/PULL_REQUEST_TEMPLATE/add-package.md),
+  with the checklist items filled in. The title should follow `feat: add <app>`.
+  PRs that do not follow this format will be closed automatically by the bot.
 - **One package per PR.**
 - **New AUR packages: set `pkgver: "0"`** on every variant except `-git`, so
   the GitHub Action performs the initial push (see
