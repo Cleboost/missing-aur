@@ -31,6 +31,7 @@ except ImportError:
     print("PyYAML required: pacman -S python-yaml", file=sys.stderr)
     sys.exit(1)
 
+from lib.git_pkgver import aur_pkgver, is_git_pkg, resolve_git_pkgver
 from lib.paths import PACKAGES_DIR, REPO_ROOT
 from lib.variant_relations import load_packages
 
@@ -220,50 +221,100 @@ def update_manifest_version(manifest_path: Path, variant_key: str | None, new_ve
 
 # ── Processing ────────────────────────────────────────────────────────────────
 
+def _copy_assets(app_dir: Path, out_dir: Path) -> None:
+    for asset in app_dir.iterdir():
+        if asset.is_file() and asset.name != "manifest.yaml":
+            shutil.copy2(asset, out_dir / asset.name)
+
+
+def _fetch_sources(out_dir: Path, pkgname: str) -> None:
+    if shutil.which("updpkgsums"):
+        if subprocess.run(["updpkgsums"], cwd=out_dir, check=False).returncode != 0:
+            raise UpdateFailed(f"updpkgsums failed for {pkgname}")
+        return
+    print("  Warning: updpkgsums not found, skipping checksum update.")
+
+
+def _write_srcinfo(out_dir: Path, pkgname: str) -> None:
+    if not shutil.which("makepkg"):
+        print("  Warning: makepkg not found, skipping .SRCINFO generation.")
+        return
+    with open(out_dir / ".SRCINFO", "w") as f:
+        if subprocess.run(["makepkg", "--printsrcinfo"], cwd=out_dir, stdout=f, check=False).returncode != 0:
+            raise UpdateFailed(f"makepkg --printsrcinfo failed for {pkgname}")
+
+
 def process_package(manifest_path: Path, variant_key: str | None, pkg: dict, force: bool, version_only: bool = False) -> dict | None:
     app_dir = manifest_path.parent
     pkgname = pkg["pkgname"]
     out_dir = app_dir / pkgname
     out_dir.mkdir(exist_ok=True)
 
+    if is_git_pkg(pkg):
+        return _process_git_package(app_dir, out_dir, pkg, force, version_only)
+
     new_ver = check_version(pkg, app_dir)
     if version_only:
-        changed = new_ver is not None
-    else:
-        changed = force or new_ver is not None or not (out_dir / "PKGBUILD").exists()
+        if new_ver is None:
+            print(f"  {pkgname}: up to date ({pkg.get('pkgver', 'N/A')})")
+            return None
+    elif not force and new_ver is None and (out_dir / "PKGBUILD").exists():
+        print(f"  {pkgname}: up to date ({pkg.get('pkgver', 'N/A')})")
+        return None
 
     if new_ver:
         print(f"  {pkgname}: {pkg.get('pkgver')} → {new_ver}")
         pkg = {**pkg, "pkgver": new_ver, "pkgrel": 1}
-    elif not changed:
-        print(f"  {pkgname}: up to date ({pkg.get('pkgver', 'N/A')})")
-        return None
+    else:
+        print(f"  {pkgname}: generating PKGBUILD...")
 
-    print(f"  {pkgname}: generating PKGBUILD...")
     generate_pkgbuild(pkg, out_dir)
-
-    # Copy local assets (everything in the app dir except the manifest).
-    for asset in app_dir.iterdir():
-        if asset.is_file() and asset.name != "manifest.yaml":
-            shutil.copy2(asset, out_dir / asset.name)
-
-    if shutil.which("updpkgsums"):
-        if subprocess.run(["updpkgsums"], cwd=out_dir, check=False).returncode != 0:
-            raise UpdateFailed(f"updpkgsums failed for {pkgname}")
-    else:
-        print("  Warning: updpkgsums not found, skipping checksum update.")
-
-    if shutil.which("makepkg"):
-        with open(out_dir / ".SRCINFO", "w") as f:
-            if subprocess.run(["makepkg", "--printsrcinfo"], cwd=out_dir, stdout=f, check=False).returncode != 0:
-                raise UpdateFailed(f"makepkg --printsrcinfo failed for {pkgname}")
-    else:
-        print("  Warning: makepkg not found, skipping .SRCINFO generation.")
+    _copy_assets(app_dir, out_dir)
+    _fetch_sources(out_dir, pkgname)
+    _write_srcinfo(out_dir, pkgname)
 
     if new_ver:
         update_manifest_version(manifest_path, variant_key, new_ver)
 
     return {"dir": str(out_dir), "pkgname": pkgname, "pkgver": str(pkg.get("pkgver", ""))}
+
+
+def _process_git_package(
+    app_dir: Path,
+    out_dir: Path,
+    pkg: dict,
+    force: bool,
+    version_only: bool,
+) -> dict | None:
+    pkgname = pkg["pkgname"]
+
+    if version_only and not force:
+        print(f"  {pkgname}: checking git version...")
+    elif not force and not version_only and (out_dir / "PKGBUILD").exists():
+        print(f"  {pkgname}: up to date (git)")
+        return None
+    else:
+        print(f"  {pkgname}: generating PKGBUILD...")
+
+    generate_pkgbuild(pkg, out_dir)
+    _copy_assets(app_dir, out_dir)
+    _fetch_sources(out_dir, pkgname)
+
+    resolved = resolve_git_pkgver(out_dir)
+    if not resolved:
+        raise UpdateFailed(f"pkgver() failed for {pkgname}")
+
+    if version_only and not force:
+        published = aur_pkgver(pkgname)
+        if published == resolved:
+            print(f"  {pkgname}: up to date ({resolved})")
+            return None
+        print(f"  {pkgname}: {published or 'new'} → {resolved}")
+    else:
+        print(f"  {pkgname}: resolved pkgver {resolved}")
+
+    _write_srcinfo(out_dir, pkgname)
+    return {"dir": str(out_dir), "pkgname": pkgname, "pkgver": resolved}
 
 
 # ── Commands ──────────────────────────────────────────────────────────────────
