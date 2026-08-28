@@ -14,7 +14,7 @@ variants:
       - "asus-fan-control-ec::git+${url}.git#branch=master"
     pkgver_func: |
       cd "${srcdir}/asus-fan-control-ec"
-      git describe --long --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g;s/^v//'
+      printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
     build: |
       cd "${srcdir}/asus-fan-control-ec"
       make
