@@ -41,6 +41,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -o pipefail
           export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/id_aur -o StrictHostKeyChecking=accept-new"
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           sudo -E -u build python3 scripts/manage.py check-updates --ci 2>&1 | tee /tmp/check_output.log

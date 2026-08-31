@@ -349,6 +349,9 @@ def cmd_check_updates(args):
     updated = []
     for manifest in find_manifests():
         for key, pkg in load_packages(manifest):
+            if is_git_pkg(pkg):
+                print(f"  {pkg['pkgname']}: skipped (git variant)")
+                continue
             try:
                 if result := process_package(manifest, key, pkg, force=False, version_only=True):
                     updated.append(result)
