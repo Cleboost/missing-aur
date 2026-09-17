@@ -8,7 +8,7 @@ pkgdesc: "Alternative Discord client made in C++ with Qt 6"
 
 variants:
   nightly:
-    pkgver: 2026.09.14_1d64ee7
+    pkgver: 2026.09.16_61e81ca
     depends: [fuse2]
     options: ["!strip"]
     versionChecker: >-
