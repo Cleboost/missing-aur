@@ -9,7 +9,7 @@ options: ["!strip"]
 
 variants:
   bin:
-    pkgver: "0.1.1"
+    pkgver: 0.2.0
     versionChecker: "curl -s https://api.github.com/repos/temper-mc/temper/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
     source:
       x86_64:
