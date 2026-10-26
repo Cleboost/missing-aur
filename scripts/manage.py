@@ -262,6 +262,7 @@ def process_package(manifest_path: Path, variant_key: str | None, pkg: dict, for
         print(f"  {pkgname}: up to date ({pkg.get('pkgver', 'N/A')})")
         return None
 
+    manifest_pkg = pkg
     if new_ver:
         print(f"  {pkgname}: {pkg.get('pkgver')} → {new_ver}")
         pkg = {**pkg, "pkgver": new_ver, "pkgrel": 1}
@@ -270,8 +271,14 @@ def process_package(manifest_path: Path, variant_key: str | None, pkg: dict, for
 
     generate_pkgbuild(pkg, out_dir)
     _copy_assets(app_dir, out_dir)
-    _fetch_sources(out_dir, pkgname)
-    _write_srcinfo(out_dir, pkgname)
+    try:
+        _fetch_sources(out_dir, pkgname)
+        _write_srcinfo(out_dir, pkgname)
+    except UpdateFailed:
+        if new_ver:
+            generate_pkgbuild(manifest_pkg, out_dir)
+            _copy_assets(app_dir, out_dir)
+        raise
 
     if new_ver:
         update_manifest_version(manifest_path, variant_key, new_ver)
@@ -347,6 +354,7 @@ def cmd_generate_all(args):
 
 def cmd_check_updates(args):
     updated = []
+    skipped = []
     for manifest in find_manifests():
         for key, pkg in load_packages(manifest):
             if is_git_pkg(pkg):
@@ -356,12 +364,20 @@ def cmd_check_updates(args):
                 if result := process_package(manifest, key, pkg, force=False, version_only=True):
                     updated.append(result)
             except UpdateFailed as exc:
-                print(f"  {exc}", file=sys.stderr)
-                if args.ci:
-                    sys.exit(1)
+                pkgname = pkg["pkgname"]
+                print(f"  {pkgname}: skipped ({exc})", file=sys.stderr)
+                skipped.append(pkgname)
+
+    if skipped:
+        print(
+            f"Warning: {len(skipped)} package(s) skipped due to errors: {', '.join(skipped)}",
+            file=sys.stderr,
+        )
 
     if args.ci:
         print(f"packages={json.dumps(updated)}")
+        if skipped:
+            print(f"skipped={json.dumps(skipped)}")
 
 
 def cmd_clean(args):

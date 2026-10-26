@@ -46,6 +46,11 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           sudo -E -u build python3 scripts/manage.py check-updates --ci 2>&1 | tee /tmp/check_output.log
           packages=$(grep '^packages=' /tmp/check_output.log | sed 's/^packages=//' || echo '[]')
+          skipped=$(grep '^skipped=' /tmp/check_output.log | sed 's/^skipped=//' || echo '[]')
+
+          if [ "$skipped" != "[]" ] && [ -n "$skipped" ]; then
+            echo "::warning::Some packages were skipped due to errors: $skipped"
+          fi
 
           if [ "$packages" = "[]" ] || [ -z "$packages" ]; then
             echo "No updates found."
