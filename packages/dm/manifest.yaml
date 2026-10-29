@@ -5,40 +5,38 @@ url: https://github.com/pranavo72bex/Easy-Download-Manager
 license: MIT
 arch: [x86_64, aarch64]
 pkgdesc: "Download manager with many connections, resume, and a queue"
-options: ["!debug", "!lto"]
 
 variants:
-  base:
+  appimage:
     pkgver: "0"
-    depends:
-      - hicolor-icon-theme
-      - libx11
-      - libxcursor
-      - libxi
-      - libxkbcommon-x11
-      - wayland
-      - libglvnd
-      - xdg-utils
-    makedepends: [rust, cargo, pkgconf, git]
+    depends: [fuse2, xdg-utils]
+    options: ["!strip"]
     optdepends:
       - "yt-dlp: downloads from sites that serve video through a player"
       - "noto-fonts-cjk: names in Chinese, Japanese and Korean"
     versionChecker: "curl -s https://api.github.com/repos/pranavo72bex/Easy-Download-Manager/releases/latest | jq -r '.tag_name' | sed 's/^desktop-v//'"
     source:
-      - "dm-${pkgver}.tar.gz::${url}/archive/refs/tags/desktop-v${pkgver}.tar.gz"
+      x86_64:
+        - "dm-appimage-${pkgver}-x86_64.AppImage::${url}/releases/download/desktop-v${pkgver}/dm_${pkgver}_x86_64.AppImage"
+        - "dm.png::https://raw.githubusercontent.com/pranavo72bex/Easy-Download-Manager/main/desktop/crates/dm-desktop/icons/128x128.png"
+        - "dm.desktop::https://raw.githubusercontent.com/pranavo72bex/Easy-Download-Manager/main/desktop/packaging/dm.desktop"
+      aarch64:
+        - "dm-appimage-${pkgver}-aarch64.AppImage::${url}/releases/download/desktop-v${pkgver}/dm_${pkgver}_aarch64.AppImage"
+        - "dm.png::https://raw.githubusercontent.com/pranavo72bex/Easy-Download-Manager/main/desktop/crates/dm-desktop/icons/128x128.png"
+        - "dm.desktop::https://raw.githubusercontent.com/pranavo72bex/Easy-Download-Manager/main/desktop/packaging/dm.desktop"
     prepare: |
-      cd "${srcdir}/Easy-Download-Manager-desktop-v${pkgver}/desktop"
-      export RUSTUP_TOOLCHAIN=stable
-      cargo fetch --locked
-    build: |
-      cd "${srcdir}/Easy-Download-Manager-desktop-v${pkgver}/desktop"
-      export RUSTUP_TOOLCHAIN=stable
-      export CARGO_TARGET_DIR=target
-      cargo build --release --frozen -p dm-desktop
+      if [ "${CARCH}" = "x86_64" ]; then
+        chmod +x "${srcdir}/dm-appimage-${pkgver}-x86_64.AppImage"
+      elif [ "${CARCH}" = "aarch64" ]; then
+        chmod +x "${srcdir}/dm-appimage-${pkgver}-aarch64.AppImage"
+      fi
     package: |
-      cd "${srcdir}/Easy-Download-Manager-desktop-v${pkgver}/desktop"
-      install -Dm755 "target/release/dm-desktop" "${pkgdir}/usr/bin/dm"
-      install -Dm644 "packaging/dm.desktop" "${pkgdir}/usr/share/applications/dm.desktop"
-      install -Dm644 "crates/dm-desktop/icons/icon.png" "${pkgdir}/usr/share/icons/hicolor/512x512/apps/dm.png"
-      install -Dm644 "crates/dm-desktop/icons/128x128.png" "${pkgdir}/usr/share/icons/hicolor/128x128/apps/dm.png"
-      install -Dm644 "${srcdir}/Easy-Download-Manager-desktop-v${pkgver}/LICENSE" "${pkgdir}/usr/share/licenses/dm/LICENSE"
+      if [ "${CARCH}" = "x86_64" ]; then
+        install -Dm755 "${srcdir}/dm-appimage-${pkgver}-x86_64.AppImage" "${pkgdir}/opt/dm-appimage/dm.AppImage"
+      elif [ "${CARCH}" = "aarch64" ]; then
+        install -Dm755 "${srcdir}/dm-appimage-${pkgver}-aarch64.AppImage" "${pkgdir}/opt/dm-appimage/dm.AppImage"
+      fi
+      install -dm755 "${pkgdir}/usr/bin"
+      ln -sf "/opt/dm-appimage/dm.AppImage" "${pkgdir}/usr/bin/dm"
+      install -Dm644 "${srcdir}/dm.png" "${pkgdir}/usr/share/icons/hicolor/128x128/apps/dm.png"
+      install -Dm644 "${srcdir}/dm.desktop" "${pkgdir}/usr/share/applications/dm.desktop"
