@@ -8,7 +8,7 @@ pkgdesc: "Download manager with many connections, resume, and a queue"
 
 variants:
   appimage:
-    pkgver: "0"
+    pkgver: 0.8.4
     depends: [fuse2, xdg-utils]
     options: ["!strip"]
     optdepends:
