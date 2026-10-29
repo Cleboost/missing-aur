@@ -7,7 +7,7 @@ pkgdesc: "Kibo Anime - Application for watching anime"
 
 variants:
   appimage:
-    pkgver: 1.1.8
+    pkgver: 1.2.0
     pkgrel: 1
     depends: [fuse2]
     options: ["!strip"]
