@@ -49,8 +49,8 @@ else
     echo "$push_output"
     if echo "$push_output" | grep -q "was deleted; pushing does not restore it"; then
       echo "Package ${pkgname} was deleted on AUR; restoring and adopting..."
-      ssh aur@aur.archlinux.org restore "$pkgname"
-      ssh aur@aur.archlinux.org adopt "$pkgname"
+      ${GIT_SSH_COMMAND:-ssh} aur@aur.archlinux.org restore "$pkgname"
+      ${GIT_SSH_COMMAND:-ssh} aur@aur.archlinux.org adopt "$pkgname"
       git push origin HEAD:master
     else
       exit 1
