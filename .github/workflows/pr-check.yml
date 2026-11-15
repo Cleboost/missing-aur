@@ -12,6 +12,8 @@ jobs:
   package-check:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.packages.outputs.apps }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -60,3 +62,39 @@ jobs:
       - name: Fail on remaining issues
         if: steps.packages.outputs.apps != '' && steps.check.outcome == 'failure'
         run: exit 1
+
+  build-test:
+    needs: package-check
+    if: needs.package-check.outputs.apps != ''
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    steps:
+      - name: Install dependencies
+        run: pacman -Syu --noconfirm git base-devel python-yaml sudo
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.head_ref }}
+
+      - name: Setup build user
+        run: |
+          useradd -m build
+          echo "build ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/build
+          chown -R build:build "$GITHUB_WORKSPACE"
+          sudo -u build git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Build and install changed packages
+        run: |
+          for app in ${{ needs.package-check.outputs.apps }}; do
+            echo "::group::Building $app"
+            sudo -u build python3 scripts/manage.py generate "$app"
+            for pkgdir in packages/"$app"/*/; do
+              if [ -f "${pkgdir}PKGBUILD" ]; then
+                (cd "$pkgdir" && sudo -u build makepkg -si --noconfirm)
+              fi
+            done
+            echo "::endgroup::"
+          done
