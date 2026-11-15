@@ -1,0 +1,12 @@
+name: gptme
+url: https://github.com/gptme/gptme
+license: MIT
+pkgdesc: "Personal AI assistant in your terminal, with tools to run code, edit files and browse"
+variants:
+  appimage:
+    pkgver: "0"
+    versionChecker: "curl -s https://api.github.com/repos/gptme/gptme/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
+    source:
+      - "gptme-${pkgver}.AppImage::${url}/releases/download/v${pkgver}/gptme_${pkgver}_amd64.AppImage"
+    package: |
+      install -Dm755 "gptme-${pkgver}.AppImage" "${pkgdir}/usr/bin/gptme-desktop"
