@@ -71,7 +71,7 @@ jobs:
       image: archlinux:latest
     steps:
       - name: Install dependencies
-        run: pacman -Syu --noconfirm git base-devel python-yaml sudo
+        run: pacman -Syu --noconfirm git base-devel python-yaml sudo curl jq
 
       - name: Checkout
         uses: actions/checkout@v7
@@ -87,7 +87,10 @@ jobs:
           sudo -u build git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Build and install changed packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          sudo -E -u build python3 scripts/manage.py check-updates
           for app in ${{ needs.package-check.outputs.apps }}; do
             echo "::group::Building $app"
             sudo -u build python3 scripts/manage.py generate "packages/$app"
