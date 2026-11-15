@@ -25,13 +25,6 @@ def format_pr_report(
         lines.append(f"Checked packages: {joined}")
         lines.append("")
 
-    lines.append("### Auto-fixes committed")
-    if auto_fixes:
-        lines.extend(f"- {item}" for item in auto_fixes)
-    else:
-        lines.append("- Nothing needed automatic fixes.")
-    lines.append("")
-
     if blocking:
         lines.append("### Blocking issues")
         lines.extend(issue.format_line() for issue in blocking)
