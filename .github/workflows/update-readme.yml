@@ -1,0 +1,32 @@
+name: Update README
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "packages/**"
+
+permissions:
+  contents: write
+
+jobs:
+  update-readme:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install dependencies
+        run: pip install -r scripts/requirements.txt
+
+      - name: Update README package table
+        run: python3 scripts/generate-readme.py fix
+
+      - name: Commit README updates
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "docs: update README package table"
+          file_pattern: README.md
+          skip_fetch: true
