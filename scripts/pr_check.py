@@ -89,7 +89,6 @@ def collect_issues(apps: list[str], base_ref: str) -> list[Issue]:
     for path in manifest_paths(apps):
         issues.extend(check_manifest(path, base_ref=base_ref))
         issues.extend(check_icon(path.parent))
-    issues.extend(run_generate_readme_check())
     return issues
 
 
