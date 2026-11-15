@@ -1,0 +1,12 @@
+name: chatgpt-cli
+url: https://github.com/kardolus/chatgpt-cli
+license: MIT
+pkgdesc: "Command-line client for ChatGPT and OpenAI-compatible APIs"
+variants:
+  bin:
+    pkgver: "0"
+    versionChecker: "curl -s https://api.github.com/repos/kardolus/chatgpt-cli/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
+    source:
+      - "chatgpt-${pkgver}::${url}/releases/download/v${pkgver}/chatgpt-linux-amd64"
+    package: |
+      install -Dm755 "chatgpt-${pkgver}" "${pkgdir}/usr/bin/chatgpt"
