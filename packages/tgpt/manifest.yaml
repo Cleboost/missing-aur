@@ -1,0 +1,15 @@
+name: tgpt
+url: https://github.com/aandrew-me/tgpt
+license: GPL-3.0-only
+pkgdesc: "AI chat in your terminal without API keys"
+docs:
+  externalAur:
+    - tgpt-git
+variants:
+  bin:
+    pkgver: "0"
+    versionChecker: "curl -s https://api.github.com/repos/aandrew-me/tgpt/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
+    source:
+      - "tgpt-${pkgver}::${url}/releases/download/v${pkgver}/tgpt-linux-amd64"
+    package: |
+      install -Dm755 "tgpt-${pkgver}" "${pkgdir}/usr/bin/tgpt"
