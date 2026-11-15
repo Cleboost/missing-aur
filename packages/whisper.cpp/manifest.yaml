@@ -1,0 +1,23 @@
+name: whisper.cpp
+url: https://github.com/ggml-org/whisper.cpp
+license: MIT
+pkgdesc: "Port of OpenAI's Whisper speech recognition model in C/C++"
+docs:
+  externalAur:
+    - whisper.cpp-git
+variants:
+  base:
+    pkgver: "0"
+    makedepends: [cmake, gcc]
+    versionChecker: "curl -s https://api.github.com/repos/ggml-org/whisper.cpp/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
+    source:
+      - "whisper.cpp-${pkgver}.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz"
+    build: |
+      cd "whisper.cpp-${pkgver}"
+      cmake -B build -DCMAKE_BUILD_TYPE=Release
+      cmake --build build --config Release
+    package: |
+      cd "whisper.cpp-${pkgver}"
+      install -Dm755 build/bin/whisper-cli "${pkgdir}/usr/bin/whisper-cli"
+      install -Dm755 build/bin/whisper-server "${pkgdir}/usr/bin/whisper-server"
+      install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/whisper.cpp/LICENSE"
