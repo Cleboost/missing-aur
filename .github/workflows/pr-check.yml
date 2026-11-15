@@ -23,7 +23,7 @@ jobs:
           fetch-depth: 0
 
       - name: Fetch base branch
-        run: git fetch origin "${{ github.base_ref }}"
+        run: git fetch --no-tags "https://github.com/${{ github.repository }}.git" "${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}"
 
       - name: Install dependencies
         run: pip install -r scripts/requirements.txt

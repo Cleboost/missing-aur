@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 0
 
       - name: Fetch base branch
-        run: git fetch origin "${{ github.base_ref }}"
+        run: git fetch --no-tags "https://github.com/${{ github.repository }}.git" "${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}"
 
       - name: Detect changed packages
         id: packages
