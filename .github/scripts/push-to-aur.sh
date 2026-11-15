@@ -48,17 +48,18 @@ else
   if ! push_output=$(git push origin HEAD:master 2>&1); then
     echo "$push_output"
     if echo "$push_output" | grep -q "was deleted; pushing does not restore it"; then
-      echo "Package ${pkgname} was deleted on AUR; restoring and adopting..."
+      echo "::warning::Package ${pkgname} was deleted on AUR; restoring and filing adoption request (skipping push until approved)."
       ${GIT_SSH_COMMAND:-ssh} aur@aur.archlinux.org restore "$pkgname"
       ${GIT_SSH_COMMAND:-ssh} aur@aur.archlinux.org adopt "$pkgname"
-      git push origin HEAD:master
+    elif echo "$push_output" | grep -qE "is orphaned|Package Maintainer must grant it"; then
+      echo "::warning::Package ${pkgname} is orphaned / adoption pending on AUR; skipping push."
     else
       exit 1
     fi
   else
     echo "$push_output"
+    echo "Pushed ${pkgname} to AUR"
   fi
-  echo "Pushed ${pkgname} to AUR"
 fi
 
 cd ..
