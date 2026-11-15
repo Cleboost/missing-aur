@@ -1,0 +1,15 @@
+name: aichat
+url: https://github.com/sigoden/aichat
+license: MIT OR Apache-2.0
+pkgdesc: "All-in-one LLM CLI: chat, shell assistant, RAG and function calling"
+docs:
+  externalAur:
+    - aichat-git
+variants:
+  bin:
+    pkgver: "0"
+    versionChecker: "curl -s https://api.github.com/repos/sigoden/aichat/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
+    source:
+      - "aichat-${pkgver}.tar.gz::${url}/releases/download/v${pkgver}/aichat-v${pkgver}-x86_64-unknown-linux-musl.tar.gz"
+    package: |
+      install -Dm755 aichat "${pkgdir}/usr/bin/aichat"
