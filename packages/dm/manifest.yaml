@@ -9,6 +9,7 @@ pkgdesc: "Download manager with many connections, resume, and a queue"
 variants:
   appimage:
     pkgver: 0.9.0
+    pkgrel: 2
     depends: [fuse2, xdg-utils]
     options: ["!strip"]
     optdepends:
@@ -18,11 +19,11 @@ variants:
     source:
       x86_64:
         - "dm-appimage-${pkgver}-x86_64.AppImage::${url}/releases/download/desktop-v${pkgver}/dm_${pkgver}_x86_64.AppImage"
-        - "dm.png::https://raw.githubusercontent.com/pranavo72bex/Easy-Download-Manager/main/desktop/crates/dm-desktop/icons/128x128.png"
+        - "dm.png::https://raw.githubusercontent.com/pranavo72bex/Easy-Download-Manager/main/desktop/crates/dm-gpui/icons/128x128.png"
         - "dm.desktop::https://raw.githubusercontent.com/pranavo72bex/Easy-Download-Manager/main/desktop/packaging/dm.desktop"
       aarch64:
         - "dm-appimage-${pkgver}-aarch64.AppImage::${url}/releases/download/desktop-v${pkgver}/dm_${pkgver}_aarch64.AppImage"
-        - "dm.png::https://raw.githubusercontent.com/pranavo72bex/Easy-Download-Manager/main/desktop/crates/dm-desktop/icons/128x128.png"
+        - "dm.png::https://raw.githubusercontent.com/pranavo72bex/Easy-Download-Manager/main/desktop/crates/dm-gpui/icons/128x128.png"
         - "dm.desktop::https://raw.githubusercontent.com/pranavo72bex/Easy-Download-Manager/main/desktop/packaging/dm.desktop"
     prepare: |
       if [ "${CARCH}" = "x86_64" ]; then
