@@ -1,0 +1,15 @@
+name: fabric
+url: https://github.com/danielmiessler/Fabric
+license: MIT
+pkgdesc: "Open-source framework for augmenting humans with AI, via reusable prompt patterns"
+docs:
+  externalAur:
+    - fabric-git
+variants:
+  bin:
+    pkgver: "0"
+    versionChecker: "curl -s https://api.github.com/repos/danielmiessler/Fabric/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
+    source:
+      - "fabric-${pkgver}.tar.gz::${url}/releases/download/v${pkgver}/fabric_Linux_x86_64.tar.gz"
+    package: |
+      install -Dm755 fabric "${pkgdir}/usr/bin/fabric"
