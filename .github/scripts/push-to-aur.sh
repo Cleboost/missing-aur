@@ -45,7 +45,19 @@ if git diff --staged --quiet; then
   echo "No changes for ${pkgname}"
 else
   git commit -m "$commit_msg"
-  git push origin HEAD:master
+  if ! push_output=$(git push origin HEAD:master 2>&1); then
+    echo "$push_output"
+    if echo "$push_output" | grep -q "was deleted; pushing does not restore it"; then
+      echo "Package ${pkgname} was deleted on AUR; restoring and adopting..."
+      ssh aur@aur.archlinux.org restore "$pkgname"
+      ssh aur@aur.archlinux.org adopt "$pkgname"
+      git push origin HEAD:master
+    else
+      exit 1
+    fi
+  else
+    echo "$push_output"
+  fi
   echo "Pushed ${pkgname} to AUR"
 fi
 
