@@ -41,7 +41,15 @@ jobs:
             const conclusion = context.payload.workflow_run.conclusion;
             const runUrl = context.payload.workflow_run.html_url;
             if (conclusion && conclusion !== 'success') {
-              recap += `\n\n### Build & install test\n- Arch Linux \`makepkg\` build/install failed (${conclusion}). See the [workflow logs](${runUrl}) for details.`;
+              const buildLine = `- Arch Linux \`makepkg\` build/install failed (${conclusion}). See the [workflow logs](${runUrl}) for details.`;
+              if (recap.includes('### Blocking issues')) {
+                recap = recap.replace('### Blocking issues\n', `### Blocking issues\n${buildLine}\n`);
+              } else {
+                recap = recap.replace(
+                  /### Status[\s\S]*$/,
+                  `### Blocking issues\n${buildLine}\n\nPlease fix the items above and push again.`
+                );
+              }
             }
 
             const body = `${marker}\n${recap}`;
