@@ -105,6 +105,14 @@ def parse_readme_table(text: str) -> tuple[str, list[str], str]:
 
 
 def write_readme(before: str, rows: list[str], after: str) -> None:
+    import re
+
+    before = re.sub(
+        r"^## Packages(?: \(\d+\))?$",
+        f"## Packages ({len(rows)})",
+        before,
+        flags=re.MULTILINE,
+    )
     table = "\n".join([TABLE_START, TABLE_SEP, *rows, ""])
     README.write_text(before + table + "\n" + after)
 
