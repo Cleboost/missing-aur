@@ -90,7 +90,7 @@ jobs:
         run: |
           for app in ${{ needs.package-check.outputs.apps }}; do
             echo "::group::Building $app"
-            sudo -u build python3 scripts/manage.py generate "$app"
+            sudo -u build python3 scripts/manage.py generate "packages/$app"
             for pkgdir in packages/"$app"/*/; do
               if [ -f "${pkgdir}PKGBUILD" ]; then
                 (cd "$pkgdir" && sudo -u build makepkg -si --noconfirm)
