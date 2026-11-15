@@ -16,6 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
         with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
@@ -37,7 +38,7 @@ jobs:
         run: python3 scripts/fix_icon.py fix ${{ steps.packages.outputs.apps }}
 
       - name: Commit icon fixes
-        if: steps.packages.outputs.apps != ''
+        if: steps.packages.outputs.apps != '' && github.event.pull_request.head.repo.full_name == github.repository
         id: icon_commit
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
@@ -50,7 +51,7 @@ jobs:
         run: python3 scripts/lint_manifest.py fix --base "origin/${{ github.base_ref }}" --fixes-out manifest-fixes.json ${{ steps.packages.outputs.apps }}
 
       - name: Commit manifest optimizations
-        if: steps.packages.outputs.apps != ''
+        if: steps.packages.outputs.apps != '' && github.event.pull_request.head.repo.full_name == github.repository
         id: manifest_commit
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
@@ -63,7 +64,7 @@ jobs:
         run: python3 scripts/generate-readme.py fix
 
       - name: Commit README updates
-        if: steps.packages.outputs.apps != ''
+        if: steps.packages.outputs.apps != '' && github.event.pull_request.head.repo.full_name == github.repository
         id: readme_commit
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
@@ -90,6 +91,7 @@ jobs:
 
       - name: Post check recap
         if: always() && steps.packages.outputs.apps != ''
+        continue-on-error: true
         uses: actions/github-script@v9
         env:
           RECAP_PATH: pr-report.md
