@@ -1,0 +1,12 @@
+name: 5ire
+url: https://github.com/nanbingxyz/5ire
+license: Apache-2.0
+pkgdesc: "Cross-platform AI assistant and MCP client"
+variants:
+  appimage:
+    pkgver: "0"
+    versionChecker: "curl -s https://api.github.com/repos/nanbingxyz/5ire/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
+    source:
+      - "5ire-${pkgver}.AppImage::${url}/releases/download/v${pkgver}/5ire-${pkgver}-x86_64.AppImage"
+    package: |
+      install -Dm755 "5ire-${pkgver}.AppImage" "${pkgdir}/usr/bin/5ire"
