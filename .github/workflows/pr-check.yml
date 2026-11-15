@@ -33,36 +33,6 @@ jobs:
           echo "apps=${apps}" >> "$GITHUB_OUTPUT"
           echo "Changed packages: ${apps:-<none>}"
 
-      - name: Resize package icons
-        if: steps.packages.outputs.apps != ''
-        run: python3 scripts/fix_icon.py fix ${{ steps.packages.outputs.apps }}
-
-      - name: Commit icon fixes
-        if: steps.packages.outputs.apps != '' && github.event.pull_request.head.repo.full_name == github.repository
-        id: icon_commit
-        uses: stefanzweifel/git-auto-commit-action@v7
-        with:
-          commit_message: "fix: resize package icons to 64x64"
-          file_pattern: packages/**/icon.png
-          skip_fetch: true
-
-      - name: Optimize manifests
-        if: steps.packages.outputs.apps != ''
-        run: python3 scripts/lint_manifest.py fix --base "origin/${{ github.base_ref }}" --fixes-out manifest-fixes.json ${{ steps.packages.outputs.apps }}
-
-      - name: Commit manifest optimizations
-        if: steps.packages.outputs.apps != '' && github.event.pull_request.head.repo.full_name == github.repository
-        id: manifest_commit
-        uses: stefanzweifel/git-auto-commit-action@v7
-        with:
-          commit_message: "refactor: optimize package manifests"
-          file_pattern: packages/**/manifest.yaml
-          skip_fetch: true
-
-      - name: Refresh base ref for recap
-        if: always() && steps.packages.outputs.apps != ''
-        run: git fetch origin "${{ github.base_ref }}" --no-tags
-
       - name: Run PR checks
         id: check
         if: always() && steps.packages.outputs.apps != ''
@@ -71,9 +41,7 @@ jobs:
           python3 scripts/pr_check.py \
             --base "origin/${{ github.base_ref }}" \
             --apps ${{ steps.packages.outputs.apps }} \
-            --output pr-report.md \
-            --icon-commit "${{ steps.icon_commit.outputs.commit_hash }}" \
-            --manifest-fixes manifest-fixes.json
+            --output pr-report.md
 
       - name: Save PR number
         if: always() && steps.packages.outputs.apps != ''
