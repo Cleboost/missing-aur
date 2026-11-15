@@ -1,0 +1,12 @@
+name: openhands-agent-canvas
+url: https://github.com/OpenHands/OpenHands
+license: MIT
+pkgdesc: "Desktop canvas for OpenHands, the AI software development agent"
+variants:
+  appimage:
+    pkgver: "0"
+    versionChecker: "curl -s https://api.github.com/repos/OpenHands/OpenHands/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
+    source:
+      - "openhands-agent-canvas-${pkgver}.AppImage::${url}/releases/download/v${pkgver}/OpenHands.Agent.Canvas-${pkgver}.AppImage"
+    package: |
+      install -Dm755 "openhands-agent-canvas-${pkgver}.AppImage" "${pkgdir}/usr/bin/openhands-agent-canvas"
