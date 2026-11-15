@@ -7,7 +7,7 @@ docs:
     - waifu2x-ncnn-vulkan-git
 variants:
   bin:
-    pkgver: "0"
+    pkgver: 20250915
     depends: [vulkan-icd-loader]
     versionChecker: "curl -s https://api.github.com/repos/nihui/waifu2x-ncnn-vulkan/releases/latest | jq -r '.tag_name' | cat"
     source:
