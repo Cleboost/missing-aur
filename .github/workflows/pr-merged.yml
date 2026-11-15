@@ -1,0 +1,44 @@
+name: PR Merged
+
+on:
+  pull_request_target:
+    types: [closed]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  notify-aur-publish:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post AUR publish notice
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+
+            const now = new Date();
+            const nextRun = new Date(Date.UTC(
+              now.getUTCFullYear(),
+              now.getUTCMonth(),
+              now.getUTCDate() + 1,
+              0, 0, 0, 0
+            ));
+
+            const nextRunIso = nextRun.toISOString().replace('T', ' ').replace('.000Z', ' UTC');
+            const workflowUrl = `https://github.com/${owner}/${repo}/actions/workflows/aur-updater.yml`;
+
+            const body = [
+              'Thanks for your contribution! This PR has been merged.',
+              '',
+              `The package will be published to the AUR on the next **[AUR Updater](${workflowUrl})** run (scheduled daily at **00:00 UTC** — next run: **${nextRunIso}**).`,
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number,
+              body,
+            });
