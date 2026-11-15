@@ -1,0 +1,65 @@
+name: PR Recap
+
+on:
+  workflow_run:
+    workflows: ["PR Check"]
+    types: [completed]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  recap:
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion != 'skipped'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download check recap artifact
+        id: download
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: pr-recap
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Post check recap
+        if: steps.download.outcome == 'success'
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('fs');
+            if (!fs.existsSync('pr-number.txt')) return;
+
+            const issue_number = parseInt(fs.readFileSync('pr-number.txt', 'utf8').trim(), 10);
+            if (!issue_number) return;
+
+            const marker = '<!-- missing-aur-recap -->';
+            const recap = fs.existsSync('pr-report.md')
+              ? fs.readFileSync('pr-report.md', 'utf8')
+              : '## Package check recap\n\nRecap generation failed — see the workflow logs.';
+            const body = `${marker}\n${recap}`;
+
+            const { owner, repo } = context.repo;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            for (const comment of comments) {
+              if (comment.body?.includes(marker)) {
+                await github.rest.issues.deleteComment({
+                  owner,
+                  repo,
+                  comment_id: comment.id,
+                });
+              }
+            }
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number,
+              body,
+            });

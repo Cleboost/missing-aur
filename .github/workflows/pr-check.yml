@@ -89,48 +89,19 @@ jobs:
             --manifest-fixes manifest-fixes.json \
             --readme-commit "${{ steps.readme_commit.outputs.commit_hash }}"
 
-      - name: Post check recap
+      - name: Save PR number
         if: always() && steps.packages.outputs.apps != ''
-        continue-on-error: true
-        uses: actions/github-script@v9
-        env:
-          RECAP_PATH: pr-report.md
+        run: echo "${{ github.event.pull_request.number }}" > pr-number.txt
+
+      - name: Upload check recap artifact
+        if: always() && steps.packages.outputs.apps != ''
+        uses: actions/upload-artifact@v4
         with:
-          script: |
-            const fs = require('fs');
-            const marker = '<!-- missing-aur-recap -->';
-            const recapPath = process.env.RECAP_PATH;
-            const recap = fs.existsSync(recapPath)
-              ? fs.readFileSync(recapPath, 'utf8')
-              : '## Package check recap\n\nRecap generation failed — see the workflow logs.';
-            const body = `${marker}\n${recap}`;
-
-            const { owner, repo } = context.repo;
-            const issue_number = context.payload.pull_request.number;
-
-            const comments = await github.paginate(github.rest.issues.listComments, {
-              owner,
-              repo,
-              issue_number,
-              per_page: 100,
-            });
-
-            for (const comment of comments) {
-              if (comment.body?.includes(marker)) {
-                await github.rest.issues.deleteComment({
-                  owner,
-                  repo,
-                  comment_id: comment.id,
-                });
-              }
-            }
-
-            await github.rest.issues.createComment({
-              owner,
-              repo,
-              issue_number,
-              body,
-            });
+          name: pr-recap
+          path: |
+            pr-report.md
+            pr-number.txt
+          if-no-files-found: ignore
 
       - name: Fail on remaining issues
         if: steps.packages.outputs.apps != '' && steps.check.outcome == 'failure'
