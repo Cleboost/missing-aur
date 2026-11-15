@@ -59,19 +59,6 @@ jobs:
           file_pattern: packages/**/manifest.yaml
           skip_fetch: true
 
-      - name: Update README package table
-        if: steps.packages.outputs.apps != ''
-        run: python3 scripts/generate-readme.py fix
-
-      - name: Commit README updates
-        if: steps.packages.outputs.apps != '' && github.event.pull_request.head.repo.full_name == github.repository
-        id: readme_commit
-        uses: stefanzweifel/git-auto-commit-action@v7
-        with:
-          commit_message: "docs: update README package table"
-          file_pattern: README.md
-          skip_fetch: true
-
       - name: Refresh base ref for recap
         if: always() && steps.packages.outputs.apps != ''
         run: git fetch origin "${{ github.base_ref }}" --no-tags
@@ -86,8 +73,7 @@ jobs:
             --apps ${{ steps.packages.outputs.apps }} \
             --output pr-report.md \
             --icon-commit "${{ steps.icon_commit.outputs.commit_hash }}" \
-            --manifest-fixes manifest-fixes.json \
-            --readme-commit "${{ steps.readme_commit.outputs.commit_hash }}"
+            --manifest-fixes manifest-fixes.json
 
       - name: Save PR number
         if: always() && steps.packages.outputs.apps != ''
