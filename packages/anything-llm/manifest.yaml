@@ -6,7 +6,7 @@ license: MIT
 pkgdesc: "All-in-one AI desktop app: local or cloud LLMs, RAG and AI agents over your documents"
 variants:
   appimage:
-    pkgver: 1.19.0
+    pkgver: 1.20.0
     versionChecker: "curl -s https://api.github.com/repos/Mintplex-Labs/anything-llm/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
     source:
       - "anything-llm-${pkgver}.AppImage::${url}/releases/download/v${pkgver}/AnythingLLMDesktop.AppImage"
