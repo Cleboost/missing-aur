@@ -51,7 +51,7 @@ jobs:
 
       - name: Upload check recap artifact
         if: always() && steps.packages.outputs.apps != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pr-recap
           path: |
