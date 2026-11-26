@@ -47,13 +47,8 @@ else
   git commit -m "$commit_msg"
   if ! push_output=$(git push origin HEAD:master 2>&1); then
     echo "$push_output"
-    if echo "$push_output" | grep -q "was deleted; pushing does not restore it"; then
-      echo "::warning::Package ${pkgname} was deleted on AUR; restoring and filing adoption request (skipping push until approved)."
-      ${GIT_SSH_COMMAND:-ssh} aur@aur.archlinux.org restore "$pkgname"
-      ${GIT_SSH_COMMAND:-ssh} aur@aur.archlinux.org adopt "$pkgname"
-      git -C "$GITHUB_WORKSPACE" checkout -- "$(dirname "$pkg_dir")/manifest.yaml" 2>/dev/null || true
-    elif echo "$push_output" | grep -qE "is orphaned|Package Maintainer must grant it"; then
-      echo "::warning::Package ${pkgname} is orphaned / adoption pending on AUR; skipping push."
+    if echo "$push_output" | grep -qE "was deleted; pushing does not restore it|is orphaned|Package Maintainer must grant it"; then
+      echo "::warning::Package ${pkgname} is deleted, orphaned, or adoption pending on AUR; skipping push."
       git -C "$GITHUB_WORKSPACE" checkout -- "$(dirname "$pkg_dir")/manifest.yaml" 2>/dev/null || true
     else
       exit 1
