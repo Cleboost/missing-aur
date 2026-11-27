@@ -7,7 +7,7 @@ docs:
 
 variants:
   bin:
-    pkgver: "0"
+    pkgver: 3.1.0
     pkgdesc: "Fast, native, open-source SSH client and host manager for Linux"
     depends: [libxkbcommon, wayland, libglvnd, libx11, libxcursor, libxrandr, libxi]
     versionChecker: "curl -s https://api.github.com/repos/Cleboost/Rustmius/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
