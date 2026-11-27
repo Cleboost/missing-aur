@@ -1,0 +1,23 @@
+name: rustmius
+url: https://github.com/Cleboost/Rustmius
+license: AGPL-3.0-or-later
+
+docs:
+  description: "Fast, native, open-source SSH client and host manager for Linux"
+
+variants:
+  bin:
+    pkgver: "0"
+    pkgdesc: "Fast, native, open-source SSH client and host manager for Linux"
+    depends: [libxkbcommon, wayland, libglvnd, libx11, libxcursor, libxrandr, libxi]
+    versionChecker: "curl -s https://api.github.com/repos/Cleboost/Rustmius/releases/latest | jq -r '.tag_name' | sed 's/^v//'"
+    source:
+      - "org.rustmius.Rustmius.desktop::https://raw.githubusercontent.com/Cleboost/Rustmius/refs/heads/master/packages/org.rustmius.Rustmius.desktop"
+      - "rustmius.png::https://raw.githubusercontent.com/Cleboost/Rustmius/refs/heads/master/packages/rustmius.png"
+      - "LICENSE::https://raw.githubusercontent.com/Cleboost/Rustmius/refs/heads/master/LICENSE"
+      - "rustmius-${pkgver}-x86_64::${url}/releases/download/v${pkgver}/rustmius-x86_64"
+    package: |
+      install -Dm755 "rustmius-${pkgver}-x86_64" "${pkgdir}/usr/bin/rustmius"
+      install -Dm644 "org.rustmius.Rustmius.desktop" "${pkgdir}/usr/share/applications/org.rustmius.Rustmius.desktop"
+      install -Dm644 "rustmius.png" "${pkgdir}/usr/share/icons/hicolor/512x512/apps/rustmius.png"
+      install -Dm644 "LICENSE" "${pkgdir}/usr/share/licenses/rustmius/LICENSE"
